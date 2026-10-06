@@ -1,0 +1,3 @@
+[submodule "external/eva"]
+	path = external/eva
+	url = https://github.com/vaistrata/eva.git

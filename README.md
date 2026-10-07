@@ -9,7 +9,7 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 예제는 Vulkan-Hpp의 `vk::raii`를 사용합니다. C API 함수와 1:1로 대응하는 호출에만 함수명을 주석으로 표기합니다.
 각 예제는 해당 폴더에서 CMake로 독립적으로 빌드합니다. 빌드 명령은 각 장의 문서를 따릅니다.
 
-1. [00. 환경 설정](examples/00-env-settings/README-kr.md) · [English](examples/00-env-settings/README.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
+1. [00. 환경 설정](examples/00-env-settings/README.md) · [English](examples/00-env-settings/README-en.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
 2. [01. Instance 생성과 해제](examples/01-instance/README-kr.md) — API 버전, instance extension 조회, RAII로 생성·해제
 3. [02. Validation layers](examples/02-validation-layers/README-kr.md) — 검증 레이어 활성화, debug messenger와 진단 메시지
 4. [03. Physical devices와 queue families](examples/03-physical-devices/README-kr.md) — 장치 기능·한계 조회, GPU와 compute 큐 패밀리 선택

@@ -10,13 +10,13 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 각 예제는 해당 폴더에서 CMake로 독립적으로 빌드합니다. 빌드 명령은 각 장의 문서를 따릅니다.
 
 1. [00. 환경 설정](examples/00-env-settings/README.md) · [English](examples/00-env-settings/README-en.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
-2. [01. Instance 생성과 해제](examples/01-instance/README-kr.md) — API 버전, instance extension 조회, RAII로 생성·해제
-3. [02. Validation layers](examples/02-validation-layers/README-kr.md) — 검증 레이어 활성화, debug messenger와 진단 메시지
-4. [03. Physical devices와 queue families](examples/03-physical-devices/README-kr.md) — 장치 기능·한계 조회, GPU와 compute 큐 패밀리 선택
-5. [04. Logical device와 queues](examples/04-logical-device/README-kr.md) — 논리 장치 생성, 사용할 기능 지정, compute queue 준비
-6. [05. Buffer와 memory](examples/05-buffers-memory/README-kr.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
-7. [06. Descriptor set layout](examples/06-descriptor-layout/README-kr.md) — SSBO, set·binding, `std430`, 레이아웃 생성
-8. [07. Descriptor pool과 sets](examples/07-descriptor-sets/README-kr.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
+2. [01. Instance 생성과 해제](examples/01-instance/README.md) — API 버전, instance extension 조회, RAII로 생성·해제
+3. [02. Validation layers](examples/02-validation-layers/README.md) — 검증 레이어 활성화, debug messenger와 진단 메시지
+4. [03. Physical devices와 queue families](examples/03-physical-devices/README.md) — 장치 기능·한계 조회, GPU와 compute 큐 패밀리 선택
+5. [04. Logical device와 queues](examples/04-logical-device/README.md) — 논리 장치 생성, 사용할 기능 지정, compute queue 준비
+6. [05. Buffer와 memory](examples/05-buffers-memory/README.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
+7. [06. Descriptor set layout](examples/06-descriptor-layout/README.md) — SSBO, set·binding, `std430`, 레이아웃 생성
+8. [07. Descriptor pool과 sets](examples/07-descriptor-sets/README.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
 
 ## 다루는 내용
 

@@ -1,6 +1,6 @@
 # 07. Descriptor pool과 set
 
-[이전: Descriptor set layout](../06-descriptor-layout/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: Descriptor set layout](../06-descriptor-layout/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -13,7 +13,7 @@ set의 binding 0, 1, 2에 입력 버퍼 두 개와 출력 버퍼 한 개를 연�
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 먼저 완료합니다.
+[환경 설정](../00-env-settings/README.md)을 먼저 완료합니다.
 C++20, CMake 3.24 이상, Vulkan SDK와 장치의 Vulkan 1.3 지원이 필요합니다.
 02장에서 설정한 validation layer도 사용합니다.
 

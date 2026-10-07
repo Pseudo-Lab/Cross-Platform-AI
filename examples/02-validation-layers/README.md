@@ -1,6 +1,6 @@
 # 02. Validation layer와 Debug messenger
 
-[이전: Instance](../01-instance/README-kr.md) · [다음: Physical device](../03-physical-devices/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: Instance](../01-instance/README.md) · [다음: Physical device](../03-physical-devices/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -9,7 +9,7 @@
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 완료합니다.
+[환경 설정](../00-env-settings/README.md)을 완료합니다.
 C++20, CMake 3.24 이상, Vulkan SDK 1.3 이상과 설치된 validation layer가 필요합니다.
 저장소 루트에서 이 예제 폴더로 이동합니다.
 

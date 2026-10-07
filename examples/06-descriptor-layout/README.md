@@ -1,6 +1,6 @@
 # 06. Descriptor set layout
 
-[이전: Buffer와 memory](../05-buffers-memory/README-kr.md) · [다음: Descriptor pool과 set](../07-descriptor-sets/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: Buffer와 memory](../05-buffers-memory/README.md) · [다음: Descriptor pool과 set](../07-descriptor-sets/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -13,7 +13,7 @@
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 먼저 완료합니다.
+[환경 설정](../00-env-settings/README.md)을 먼저 완료합니다.
 C++20, CMake 3.24 이상, Vulkan SDK와 장치의 Vulkan 1.3 지원이 필요합니다.
 02장에서 설정한 validation layer도 사용합니다.
 

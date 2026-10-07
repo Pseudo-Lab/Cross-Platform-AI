@@ -1,6 +1,6 @@
 # 03. Physical device와 Queue family
 
-[이전: Validation layer](../02-validation-layers/README-kr.md) · [다음: Logical device](../04-logical-device/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: Validation layer](../02-validation-layers/README.md) · [다음: Logical device](../04-logical-device/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -12,7 +12,7 @@ Vulkan 1.3과 컴퓨트 명령을 지원하는 물리 장치를 선택합니다.
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 완료합니다.
+[환경 설정](../00-env-settings/README.md)을 완료합니다.
 C++20, CMake 3.24 이상, Vulkan SDK 1.3 이상과 validation layer가 필요합니다.
 실행할 물리 장치도 Vulkan 1.3 이상을 지원해야 합니다.
 저장소 루트에서 이 예제 폴더로 이동합니다.

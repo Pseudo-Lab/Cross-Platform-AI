@@ -1,6 +1,6 @@
 # 01. Instance 생성과 해제
 
-[이전: 환경 설정](../00-env-settings/README-kr.md) · [다음: Validation layers](../02-validation-layers/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 환경 설정](../00-env-settings/README.md) · [다음: Validation layers](../02-validation-layers/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -9,7 +9,7 @@ Vulkan Instance를 생성하고 해제합니다. 그 과정에서 애플리케�
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 먼저 완료합니다.
+[환경 설정](../00-env-settings/README.md)을 먼저 완료합니다.
 C++20, CMake 3.24 이상과 Vulkan SDK 1.3 이상이 필요합니다.
 프로그램이 요청하는 API 버전도 Vulkan 1.3입니다.
 설치된 SDK가 1.4여도 이 예제는 API 1.3을 요청합니다.

@@ -1,6 +1,6 @@
 # 04. Logical device와 compute queue
 
-[이전: Physical device와 queue family](../03-physical-devices/README-kr.md) · [다음: Buffer와 memory](../05-buffers-memory/README-kr.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: Physical device와 queue family](../03-physical-devices/README.md) · [다음: Buffer와 memory](../05-buffers-memory/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 ## 목적
 
@@ -9,7 +9,7 @@
 
 ## 빌드와 실행
 
-[환경 설정](../00-env-settings/README-kr.md)을 완료한 환경에서 실행합니다.
+[환경 설정](../00-env-settings/README.md)을 완료한 환경에서 실행합니다.
 C++20, CMake 3.24 이상, Vulkan SDK와 로더·GPU의 Vulkan 1.3 지원이 필요합니다.
 02장에서 사용하는 validation layer도 설치되어 있어야 합니다.
 

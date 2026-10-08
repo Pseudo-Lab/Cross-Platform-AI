@@ -37,10 +37,9 @@ private:
 
         // TODO: 확장 목록에서 VK_EXT_debug_utils 지원 여부를 확인합니다.
         const auto extensions = context.enumerateInstanceExtensionProperties(); // C API: vkEnumerateInstanceExtensionProperties
-        std::cout << "Available instance extensions:\n";
         for (const auto& extension : extensions)
         {
-            std::cout << "  " << extension.extensionName << '\n';
+            // TODO: VK_EXT_debug_utils와 이름이 일치하는지 확인합니다.
         }
 
         vk::InstanceCreateInfo createInfo{};
@@ -48,7 +47,6 @@ private:
         // TODO: 레이어와 확장을 활성화하고 콜백 생성 정보를 연결합니다.
 
         instance = vk::raii::Instance(context, createInfo); // C API: vkCreateInstance
-        std::cout << "Instance created.\n";
     }
 };
 
@@ -59,6 +57,6 @@ int main()
         app.run();
     } // C API: vkDestroyInstance (app.instance 소멸자)
 
-    std::cout << "Instance destroyed.\n";
+    std::cout << "Debug messenger and instance destroyed.\n";
     return 0;
 }

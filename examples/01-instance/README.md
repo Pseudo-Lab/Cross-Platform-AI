@@ -120,26 +120,9 @@ void initVulkan()
 
 ## 인스턴스가 해제되는 시점 확인하기
 
-`vk::raii` 객체는 수명이 끝날 때 자신이 관리하는 Vulkan 자원을 해제합니다. 인스턴스를 해제한 뒤 메시지를 출력해 이 시점을 확인하겠습니다.
+`vk::raii` 객체는 수명이 끝날 때 자신이 관리하는 Vulkan 자원을 해제합니다. 시작 코드의 `main()`에는 `app`을 감싼 안쪽 블록과 종료 출력이 준비되어 있습니다. 이 블록이 끝나면 멤버가 선언의 역순으로 소멸하므로 인스턴스가 먼저 해제되고, 그 뒤에 `Instance destroyed.`가 출력됩니다.
 
-먼저 기존 `main()` 안의 `ComputeApplication app;`과 `app.run();`을 중괄호로 감쌉니다. 아래 블록은 함수 전체가 아니라, `return 0;` 앞에 놓일 부분입니다.
-
-```cpp
-{
-    ComputeApplication app;
-    app.run();
-} // C API: vkDestroyInstance (app.instance 소멸자)
-```
-
-안쪽 중괄호가 끝나면 `app`이 소멸하면서 멤버도 선언의 역순으로 소멸합니다. `context` 다음에 `instance`를 선언했으므로 인스턴스가 먼저 해제됩니다.
-
-방금 만든 블록 뒤, 기존 `return 0;` 앞에 다음 출력을 넣습니다.
-
-```cpp
-std::cout << "Instance destroyed.\n";
-```
-
-이제 생성과 해제 메시지를 순서대로 확인할 수 있습니다. 다음 장에서는 Vulkan 사용 중 생기는 경고와 오류를 받을 Validation layer를 추가하겠습니다.
+다음 장에서는 Vulkan 사용 중 생기는 경고와 오류를 받을 Validation layer를 추가하겠습니다.
 
 ## 빌드와 실행
 
@@ -185,12 +168,14 @@ cmake --build build --target instance_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 확장 목록 뒤에 다음 두 줄이 출력됩니다. 아직 채우지 않은 시작 코드는 아무것도 출력하지 않고 종료합니다.
+코드를 모두 채웠다면 확장 목록 뒤에 다음 두 줄이 출력됩니다. 종료 메시지만으로는 구현 완료를 확인할 수 없으므로 확장 목록과 `Instance created.`도 함께 확인합니다.
 
 ```text
 Instance created.
 Instance destroyed.
 ```
+
+이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 
 ---
 

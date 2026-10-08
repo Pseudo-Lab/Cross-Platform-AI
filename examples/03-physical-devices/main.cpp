@@ -52,10 +52,8 @@ private:
 
         const auto extensions = context.enumerateInstanceExtensionProperties(); // C API: vkEnumerateInstanceExtensionProperties
         bool debugUtilsAvailable = false;
-        std::cout << "Available instance extensions:\n";
         for (const auto& extension : extensions)
         {
-            std::cout << "  " << extension.extensionName << '\n';
             if (std::strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
             {
                 debugUtilsAvailable = true;
@@ -85,8 +83,6 @@ private:
         createInfo.pNext = &debugCreateInfo;
 
         instance = vk::raii::Instance(context, createInfo); // C API: vkCreateInstance
-        std::cout << "Instance created.\n"
-                  << "Validation layer enabled: " << validationLayer << '\n';
         return true;
     }
 
@@ -105,19 +101,7 @@ private:
     bool setupDebugMessenger()
     {
         debugMessenger = instance.createDebugUtilsMessengerEXT(makeDebugMessengerCreateInfo()); // C API: vkCreateDebugUtilsMessengerEXT
-        std::cout << "Debug messenger created.\n";
         return true;
-    }
-
-    void submitDebugMessage()
-    {
-        vk::DebugUtilsMessengerCallbackDataEXT callbackData{};
-        callbackData.pMessageIdName = "tutorial.callback-check";
-        callbackData.pMessage = "Application-injected callback check; this is not a validation error.";
-        instance.submitDebugUtilsMessageEXT( // C API: vkSubmitDebugUtilsMessageEXT
-            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral,
-            callbackData);
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -147,6 +131,5 @@ int main()
         }
     }
 
-    std::cout << "Debug messenger and instance destroyed.\n";
     return 0;
 }

@@ -343,12 +343,6 @@ bool initVulkan()
 }
 ```
 
-마지막으로 `main()`에서 `app`의 범위가 끝난 뒤 출력하는 메시지도 바꿉니다. 해당 TODO와 기존 출력문을 다음 줄로 교체합니다.
-
-```cpp
-std::cout << "Buffers, memory, device, debug messenger and instance destroyed.\n";
-```
-
 버퍼 멤버를 `device` 뒤에 선언했으므로 버퍼와 메모리가 디바이스보다 먼저 정리됩니다. 다음 장에서는 이 버퍼들을 셰이더에 어떻게 연결할지 정하는 디스크립터 레이아웃을 만들겠습니다.
 
 ## 빌드와 실행
@@ -403,9 +397,10 @@ Input B: 10 11 12 13 14 15 16 17
 Output (initial): 0 0 0 0 0 0 0 0
 Host-visible storage buffers ready: 3 x 32 bytes.
 CPU write/readback verified. No GPU dispatch yet.
+Buffers and memory destroyed.
 ```
 
-아직 채우지 않은 시작 코드는 이전 장처럼 논리적 디바이스와 큐 생성까지만 실행합니다.
+이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 
 ---
 

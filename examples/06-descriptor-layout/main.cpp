@@ -78,10 +78,8 @@ private:
 
         const auto extensions = context.enumerateInstanceExtensionProperties(); // C API: vkEnumerateInstanceExtensionProperties
         bool debugUtilsAvailable = false;
-        std::cout << "Available instance extensions:\n";
         for (const auto& extension : extensions)
         {
-            std::cout << "  " << extension.extensionName << '\n';
             if (std::strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
             {
                 debugUtilsAvailable = true;
@@ -111,8 +109,6 @@ private:
         createInfo.pNext = &debugCreateInfo;
 
         instance = vk::raii::Instance(context, createInfo); // C API: vkCreateInstance
-        std::cout << "Instance created.\n"
-                  << "Validation layer enabled: " << validationLayer << '\n';
         return true;
     }
 
@@ -131,7 +127,6 @@ private:
     bool setupDebugMessenger()
     {
         debugMessenger = instance.createDebugUtilsMessengerEXT(makeDebugMessengerCreateInfo()); // C API: vkCreateDebugUtilsMessengerEXT
-        std::cout << "Debug messenger created.\n";
         return true;
     }
 
@@ -173,7 +168,6 @@ private:
 
             physicalDevice = std::move(candidate);
             computeQueueFamilyIndex = *queueFamily;
-            printDeviceInfo();
             return true;
         }
         std::cerr << "No Vulkan 1.3 physical device with a compute queue family found.\n";
@@ -195,29 +189,6 @@ private:
         return std::nullopt;
     }
 
-    void printDeviceInfo()
-    {
-        const auto properties = physicalDevice.getProperties(); // C API: vkGetPhysicalDeviceProperties
-        const auto features = physicalDevice.getFeatures(); // C API: vkGetPhysicalDeviceFeatures
-        const auto queueFamilies = physicalDevice.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        const auto& limits = properties.limits;
-
-        std::cout << "Selected physical device: " << properties.deviceName << '\n'
-                  << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        std::cout << "Device API version: "
-                  << VK_API_VERSION_MAJOR(properties.apiVersion) << '.'
-                  << VK_API_VERSION_MINOR(properties.apiVersion) << '.'
-                  << VK_API_VERSION_PATCH(properties.apiVersion) << '\n';
-        std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
-                  << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
-                  << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
-                  << "maxComputeWorkGroupCount: " << limits.maxComputeWorkGroupCount[0] << ", "
-                  << limits.maxComputeWorkGroupCount[1] << ", " << limits.maxComputeWorkGroupCount[2] << '\n'
-                  << "maxComputeWorkGroupSize: " << limits.maxComputeWorkGroupSize[0] << ", "
-                  << limits.maxComputeWorkGroupSize[1] << ", " << limits.maxComputeWorkGroupSize[2] << '\n'
-                  << "maxComputeWorkGroupInvocations: " << limits.maxComputeWorkGroupInvocations << '\n'
-                  << "maxStorageBufferRange: " << limits.maxStorageBufferRange << " bytes\n";
-    }
 
     bool createLogicalDevice()
     {
@@ -235,8 +206,6 @@ private:
 
         device = vk::raii::Device(physicalDevice, createInfo); // C API: vkCreateDevice
         computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, 0); // C API: vkGetDeviceQueue
-        std::cout << "Logical device created.\n"
-                  << "Compute queue ready: family " << computeQueueFamilyIndex << ", queue 0.\n";
         return true;
     }
 
@@ -265,8 +234,6 @@ private:
             return false;
         }
 
-        std::cout << "Host-visible storage buffers ready: 3 x " << bufferSize << " bytes.\n"
-                  << "CPU write/readback verified. No GPU dispatch yet.\n";
         return true;
     }
 
@@ -293,9 +260,6 @@ private:
         resource.memory = vk::raii::DeviceMemory(device, allocationInfo); // C API: vkAllocateMemory
         resource.buffer.bindMemory(*resource.memory, 0); // C API: vkBindBufferMemory
 
-        std::cout << "Buffer memory: size " << requirements.size
-                  << ", alignment " << requirements.alignment
-                  << ", type " << memoryTypeIndex << '\n';
         return true;
     }
 
@@ -337,12 +301,6 @@ private:
             return false;
         }
 
-        std::cout << label << ':';
-        for (float value : readback)
-        {
-            std::cout << ' ' << value;
-        }
-        std::cout << '\n';
         return true;
     }
     // TODO: createDescriptorSetLayout() 함수를 추가합니다.
@@ -358,6 +316,6 @@ int main()
         }
     }
 
-    std::cout << "Buffers, memory, device, debug messenger and instance destroyed.\n";
+    std::cout << "Descriptor set layout destroyed.\n";
     return 0;
 }

@@ -148,13 +148,13 @@ if (!checkValidationLayerSupport())
 
 레이어를 찾지 못했다면 인스턴스를 만들지 않고 종료합니다. 아래에 있는 `appInfo` 설정은 그대로 사용합니다.
 
-콜백 등록과 메시지 제출에는 `VK_EXT_debug_utils` 확장도 필요합니다. 기존 확장 목록 조회 줄 바로 아래, 목록 출력과 반복문 앞에 검색 결과를 저장할 변수를 추가합니다.
+콜백 등록과 메시지 제출에는 `VK_EXT_debug_utils` 확장도 필요합니다. 기존 확장 목록 조회 줄 바로 아래, 반복문 앞에 검색 결과를 저장할 변수를 추가합니다.
 
 ```cpp
 bool debugUtilsAvailable = false;
 ```
 
-기존 `for (const auto& extension : extensions)` 안에서 이름을 출력하는 줄 다음에 아래 검사를 추가합니다.
+기존 `for (const auto& extension : extensions)` 안의 TODO를 아래 검사로 바꿉니다.
 
 ```cpp
 if (std::strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
@@ -207,11 +207,10 @@ auto debugCreateInfo = makeDebugMessengerCreateInfo();
 createInfo.pNext = &debugCreateInfo;
 ```
 
-그 아래의 `instance = vk::raii::Instance(context, createInfo);`는 그대로 사용합니다. 마지막의 기존 `Instance created.` 출력은 아래로 교체해 레이어 이름도 확인하고, 함수 끝에 성공을 반환합니다.
+그 아래의 `instance = vk::raii::Instance(context, createInfo);`는 그대로 사용합니다. 인스턴스 생성 바로 아래에 활성화한 레이어 이름을 출력하고, 함수 끝에 성공을 반환합니다.
 
 ```cpp
-std::cout << "Instance created.\n"
-          << "Validation layer enabled: " << validationLayer << '\n';
+std::cout << "Validation layer enabled: " << validationLayer << '\n';
 return true;
 ```
 
@@ -315,11 +314,7 @@ if (!app.run())
 }
 ```
 
-실패는 종료 코드 1로 전달됩니다. 성공하면 안쪽 블록을 빠져나오며 messenger와 인스턴스가 순서대로 해제됩니다. 기존 소멸 주석을 지우고, 블록 뒤의 출력 문장은 다음으로 교체합니다. 마지막 `return 0;`은 그대로 둡니다.
-
-```cpp
-std::cout << "Debug messenger and instance destroyed.\n";
-```
+실패는 종료 코드 1로 전달됩니다. 성공하면 안쪽 블록을 빠져나오며 messenger와 인스턴스가 순서대로 해제됩니다. 블록 뒤의 종료 출력은 시작 코드에 준비되어 있습니다.
 
 이제 레이어 지원 확인 → 인스턴스 생성 → messenger 생성 → 확인용 메시지 제출 순서로 실행됩니다. 다음 장부터는 이 설정으로 실제 Vulkan 사용 중 발생하는 메시지를 받으면서 물리적 디바이스를 선택하겠습니다.
 
@@ -367,15 +362,16 @@ cmake --build build --target validation_layers_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 확장 목록 뒤에 다음 메시지를 확인할 수 있습니다. 시작 코드는 01장처럼 인스턴스만 생성하고 해제합니다.
+코드를 모두 채웠다면 레이어 활성화, messenger 생성과 확인용 콜백 메시지가 출력됩니다.
 
 ```text
-Instance created.
 Validation layer enabled: VK_LAYER_KHRONOS_validation
 Debug messenger created.
 [debug Warning { General }] tutorial.callback-check: Application-injected callback check; this is not a validation error.
 Debug messenger and instance destroyed.
 ```
+
+이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 
 ---
 

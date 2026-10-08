@@ -23,7 +23,11 @@ private:
 
 int main()
 {
-    ComputeApplication app;
-    app.run();
+    {
+        ComputeApplication app;
+        app.run();
+    } // C API: vkDestroyInstance (app.instance 소멸자)
+
+    std::cout << "Instance destroyed.\n";
     return 0;
 }

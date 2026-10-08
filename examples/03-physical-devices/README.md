@@ -296,6 +296,8 @@ cmake --build build --target physical_devices_completed
 
 이 장에서 준비한 것은 장치 선택까지입니다. GPU에 컴퓨트 명령을 제출하는 과정은 이후 장에서 이어집니다.
 
+이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
+
 ---
 
 이 문서는 [Khronos Vulkan Tutorial: Physical devices and queue families](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html)를 번역한 학습 노트를 바탕으로 컴퓨트 실습에 맞게 각색했습니다. 원문과 이 문서는 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)을 따릅니다.

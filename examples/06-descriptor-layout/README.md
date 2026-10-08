@@ -148,11 +148,14 @@ cmake --build build --target descriptor_layout_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 버퍼 생성 출력에 이어 다음 줄이 출력됩니다. 시작 코드를 그대로 실행하면 이전 장의 버퍼 생성까지만 수행합니다.
+코드를 모두 채웠다면 레이아웃 생성 결과와 종료 메시지가 출력됩니다.
 
 ```text
 Descriptor set layout created: 3 storage-buffer bindings.
+Descriptor set layout destroyed.
 ```
+
+이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 
 ---
 

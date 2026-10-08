@@ -1,10 +1,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
-#include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <optional>
-#include <utility>
 
 class ComputeApplication
 {
@@ -25,12 +22,12 @@ private:
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
-    vk::raii::PhysicalDevice physicalDevice = nullptr;
-    std::uint32_t computeQueueFamilyIndex = 0;
+    // TODO: 물리적 디바이스와 큐 패밀리 인덱스 멤버를 추가합니다.
 
     bool initVulkan()
     {
-        return createInstance() && setupDebugMessenger() && pickPhysicalDevice();
+        // TODO: pickPhysicalDevice()를 초기화 순서에 추가합니다.
+        return createInstance() && setupDebugMessenger();
     }
 
     bool checkValidationLayerSupport()
@@ -49,22 +46,6 @@ private:
 
     bool createInstance()
     {
-        constexpr auto requestedVersion = VK_API_VERSION_1_3;
-
-        if (!context.getDispatcher()->vkEnumerateInstanceVersion)
-        {
-            std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
-            return false;
-        }
-
-        const auto loaderVersion = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
-        printVersion("Vulkan loader version: ", loaderVersion);
-        printVersion("Requested API version: ", requestedVersion);
-        if (loaderVersion < requestedVersion)
-        {
-            std::cerr << "The loader does not support the requested API version.\n";
-            return false;
-        }
         if (!checkValidationLayerSupport())
         {
             return false;
@@ -92,7 +73,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = requestedVersion;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         const char* requiredExtensions[] = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         auto debugCreateInfo = makeDebugMessengerCreateInfo();
@@ -154,80 +135,7 @@ private:
         return VK_FALSE;
     }
 
-    bool pickPhysicalDevice()
-    {
-        auto physicalDevices = instance.enumeratePhysicalDevices(); // C API: vkEnumeratePhysicalDevices
-        if (physicalDevices.empty())
-        {
-            std::cerr << "No Vulkan physical devices found.\n";
-            return false;
-        }
-
-        for (auto& candidate : physicalDevices)
-        {
-            const auto properties = candidate.getProperties(); // C API: vkGetPhysicalDeviceProperties
-            if (properties.apiVersion < VK_API_VERSION_1_3)
-            {
-                continue;
-            }
-            const auto queueFamily = findComputeQueueFamily(candidate);
-            if (!queueFamily)
-            {
-                continue;
-            }
-
-            physicalDevice = std::move(candidate);
-            computeQueueFamilyIndex = *queueFamily;
-            printDeviceInfo();
-            return true;
-        }
-        std::cerr << "No Vulkan 1.3 physical device with a compute queue family found.\n";
-        return false;
-    }
-
-    static std::optional<std::uint32_t> findComputeQueueFamily(
-        const vk::raii::PhysicalDevice& candidate)
-    {
-        const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
-        {
-            const auto& family = queueFamilies[index];
-            if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
-            {
-                return index;
-            }
-        }
-        return std::nullopt;
-    }
-
-    void printDeviceInfo()
-    {
-        const auto properties = physicalDevice.getProperties(); // C API: vkGetPhysicalDeviceProperties
-        const auto features = physicalDevice.getFeatures(); // C API: vkGetPhysicalDeviceFeatures
-        const auto queueFamilies = physicalDevice.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        const auto& limits = properties.limits;
-
-        std::cout << "Selected physical device: " << properties.deviceName << '\n'
-                  << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        printVersion("Device API version: ", properties.apiVersion);
-        std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
-                  << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
-                  << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
-                  << "maxComputeWorkGroupCount: " << limits.maxComputeWorkGroupCount[0] << ", "
-                  << limits.maxComputeWorkGroupCount[1] << ", " << limits.maxComputeWorkGroupCount[2] << '\n'
-                  << "maxComputeWorkGroupSize: " << limits.maxComputeWorkGroupSize[0] << ", "
-                  << limits.maxComputeWorkGroupSize[1] << ", " << limits.maxComputeWorkGroupSize[2] << '\n'
-                  << "maxComputeWorkGroupInvocations: " << limits.maxComputeWorkGroupInvocations << '\n'
-                  << "maxStorageBufferRange: " << limits.maxStorageBufferRange << " bytes\n";
-    }
-
-    static void printVersion(const char* label, std::uint32_t version)
-    {
-        std::cout << label
-                  << VK_API_VERSION_MAJOR(version) << '.'
-                  << VK_API_VERSION_MINOR(version) << '.'
-                  << VK_API_VERSION_PATCH(version) << '\n';
-    }
+    // TODO: findComputeQueueFamily(), pickPhysicalDevice(), printDeviceInfo()를 추가합니다.
 };
 
 int main()

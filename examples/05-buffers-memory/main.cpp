@@ -1,7 +1,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
-#include <array>
-#include <cstddef>
+// TODO: <array>와 <cstddef> 헤더를 추가합니다.
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -23,15 +22,8 @@ public:
 
 private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
-    static_assert(sizeof(float) == 4);
-    static constexpr std::uint32_t elementCount = 8;
-    static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
 
-    struct BufferResource
-    {
-        vk::raii::DeviceMemory memory = nullptr;
-        vk::raii::Buffer buffer = nullptr;
-    };
+    // TODO: 버퍼 크기와 BufferResource 구조체를 추가합니다.
 
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
@@ -40,17 +32,15 @@ private:
     std::uint32_t computeQueueFamilyIndex = 0;
     vk::raii::Device device = nullptr;
     vk::raii::Queue computeQueue = nullptr;
-    BufferResource inputA;
-    BufferResource inputB;
-    BufferResource output;
+    // TODO: inputA, inputB, output 멤버를 추가합니다.
 
     bool initVulkan()
     {
+        // TODO: 마지막에 createStorageBuffers() 호출을 연결합니다.
         return createInstance()
             && setupDebugMessenger()
             && pickPhysicalDevice()
-            && createLogicalDevice()
-            && createStorageBuffers();
+            && createLogicalDevice();
     }
 
     bool checkValidationLayerSupport()
@@ -69,22 +59,6 @@ private:
 
     bool createInstance()
     {
-        constexpr auto requestedVersion = VK_API_VERSION_1_3;
-
-        if (!context.getDispatcher()->vkEnumerateInstanceVersion)
-        {
-            std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
-            return false;
-        }
-
-        const auto loaderVersion = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
-        printVersion("Vulkan loader version: ", loaderVersion);
-        printVersion("Requested API version: ", requestedVersion);
-        if (loaderVersion < requestedVersion)
-        {
-            std::cerr << "The loader does not support the requested API version.\n";
-            return false;
-        }
         if (!checkValidationLayerSupport())
         {
             return false;
@@ -112,7 +86,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = requestedVersion;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         const char* requiredExtensions[] = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         auto debugCreateInfo = makeDebugMessengerCreateInfo();
@@ -229,7 +203,10 @@ private:
 
         std::cout << "Selected physical device: " << properties.deviceName << '\n'
                   << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        printVersion("Device API version: ", properties.apiVersion);
+        std::cout << "Device API version: "
+                  << VK_API_VERSION_MAJOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_MINOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_PATCH(properties.apiVersion) << '\n';
         std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
                   << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
                   << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
@@ -261,120 +238,8 @@ private:
                   << "Compute queue ready: family " << computeQueueFamilyIndex << ", queue 0.\n";
         return true;
     }
-
-    bool createStorageBuffers()
-    {
-        if (!createBuffer(bufferSize, inputA)
-            || !createBuffer(bufferSize, inputB)
-            || !createBuffer(bufferSize, output))
-        {
-            return false;
-        }
-
-        std::array<float, elementCount> valuesA{};
-        std::array<float, elementCount> valuesB{};
-        const std::array<float, elementCount> initialOutput{};
-        for (std::uint32_t i = 0; i < elementCount; ++i)
-        {
-            valuesA[i] = static_cast<float>(i);
-            valuesB[i] = 10.0f + static_cast<float>(i);
-        }
-
-        if (!writeAndVerifyBuffer(inputA, valuesA, "Input A")
-            || !writeAndVerifyBuffer(inputB, valuesB, "Input B")
-            || !writeAndVerifyBuffer(output, initialOutput, "Output (initial)"))
-        {
-            return false;
-        }
-
-        std::cout << "Host-visible storage buffers ready: 3 x " << bufferSize << " bytes.\n"
-                  << "CPU write/readback verified. No GPU dispatch yet.\n";
-        return true;
-    }
-
-    bool createBuffer(vk::DeviceSize size, BufferResource& resource)
-    {
-        vk::BufferCreateInfo bufferInfo{};
-        bufferInfo.size = size;
-        bufferInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer;
-        bufferInfo.sharingMode = vk::SharingMode::eExclusive;
-        resource.buffer = vk::raii::Buffer(device, bufferInfo); // C API: vkCreateBuffer
-
-        const auto requirements = resource.buffer.getMemoryRequirements(); // C API: vkGetBufferMemoryRequirements
-        const auto properties = vk::MemoryPropertyFlagBits::eHostVisible
-            | vk::MemoryPropertyFlagBits::eHostCoherent;
-        std::uint32_t memoryTypeIndex = 0;
-        if (!findMemoryType(requirements.memoryTypeBits, properties, memoryTypeIndex))
-        {
-            return false;
-        }
-
-        vk::MemoryAllocateInfo allocationInfo{};
-        allocationInfo.allocationSize = requirements.size;
-        allocationInfo.memoryTypeIndex = memoryTypeIndex;
-        resource.memory = vk::raii::DeviceMemory(device, allocationInfo); // C API: vkAllocateMemory
-        resource.buffer.bindMemory(*resource.memory, 0); // C API: vkBindBufferMemory
-
-        std::cout << "Buffer memory: size " << requirements.size
-                  << ", alignment " << requirements.alignment
-                  << ", type " << memoryTypeIndex << '\n';
-        return true;
-    }
-
-    bool findMemoryType(std::uint32_t typeFilter, vk::MemoryPropertyFlags properties,
-                        std::uint32_t& typeIndex)
-    {
-        const auto memoryProperties = physicalDevice.getMemoryProperties(); // C API: vkGetPhysicalDeviceMemoryProperties
-        for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
-        {
-            const bool allowed = (typeFilter & (1u << i)) != 0;
-            const bool hasProperties =
-                (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties;
-            if (allowed && hasProperties)
-            {
-                typeIndex = i;
-                return true;
-            }
-        }
-
-        std::cerr << "No compatible HOST_VISIBLE | HOST_COHERENT memory type found.\n";
-        return false;
-    }
-
-    bool writeAndVerifyBuffer(BufferResource& resource,
-                              const std::array<float, elementCount>& values,
-                              const char* label)
-    {
-        void* mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(mapped, values.data(), static_cast<std::size_t>(bufferSize));
-        resource.memory.unmapMemory(); // C API: vkUnmapMemory
-
-        std::array<float, elementCount> readback{};
-        mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(readback.data(), mapped, static_cast<std::size_t>(bufferSize));
-        resource.memory.unmapMemory(); // C API: vkUnmapMemory
-        if (readback != values)
-        {
-            std::cerr << label << ": CPU data verification failed.\n";
-            return false;
-        }
-
-        std::cout << label << ':';
-        for (float value : readback)
-        {
-            std::cout << ' ' << value;
-        }
-        std::cout << '\n';
-        return true;
-    }
-
-    static void printVersion(const char* label, std::uint32_t version)
-    {
-        std::cout << label
-                  << VK_API_VERSION_MAJOR(version) << '.'
-                  << VK_API_VERSION_MINOR(version) << '.'
-                  << VK_API_VERSION_PATCH(version) << '\n';
-    }
+    // TODO: createStorageBuffers(), createBuffer(), findMemoryType(),
+    // writeAndVerifyBuffer()를 추가합니다.
 };
 
 int main()
@@ -387,6 +252,7 @@ int main()
         }
     }
 
-    std::cout << "Buffers, memory, device, debug messenger and instance destroyed.\n";
+    // TODO: 버퍼와 메모리도 해제되었음을 출력하도록 메시지를 바꿉니다.
+    std::cout << "Device, debug messenger and instance destroyed.\n";
     return 0;
 }

@@ -8,8 +8,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Vulkan 1.3 REQUIRED)
 
 add_executable(descriptor_layout_example main.cpp)
-target_link_libraries(descriptor_layout_example PRIVATE Vulkan::Vulkan ${CMAKE_DL_LIBS})
-
-if(MSVC)
-    target_compile_options(descriptor_layout_example PRIVATE /utf-8)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../completed/06-descriptor-layout.cpp")
+    add_executable(descriptor_layout_completed EXCLUDE_FROM_ALL ../completed/06-descriptor-layout.cpp)
+    set_target_properties(descriptor_layout_completed PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/completed")
 endif()
+
+foreach(target descriptor_layout_example descriptor_layout_completed)
+    if(NOT TARGET ${target})
+        continue()
+    endif()
+    set_target_properties(${target} PROPERTIES OUTPUT_NAME main)
+    target_link_libraries(${target} PRIVATE Vulkan::Vulkan ${CMAKE_DL_LIBS})
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /utf-8)
+    endif()
+endforeach()

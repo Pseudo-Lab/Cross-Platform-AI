@@ -23,6 +23,7 @@ public:
 
 private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
+
     static_assert(sizeof(float) == 4);
     static constexpr std::uint32_t elementCount = 8;
     static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
@@ -43,16 +44,16 @@ private:
     BufferResource inputA;
     BufferResource inputB;
     BufferResource output;
-    vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
+    // TODO: descriptorSetLayout 멤버를 추가합니다.
 
     bool initVulkan()
     {
+        // TODO: createStorageBuffers() 다음에 createDescriptorSetLayout()을 호출합니다.
         return createInstance()
             && setupDebugMessenger()
             && pickPhysicalDevice()
             && createLogicalDevice()
-            && createStorageBuffers()
-            && createDescriptorSetLayout();
+            && createStorageBuffers();
     }
 
     bool checkValidationLayerSupport()
@@ -71,22 +72,6 @@ private:
 
     bool createInstance()
     {
-        constexpr auto requestedVersion = VK_API_VERSION_1_3;
-
-        if (!context.getDispatcher()->vkEnumerateInstanceVersion)
-        {
-            std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
-            return false;
-        }
-
-        const auto loaderVersion = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
-        printVersion("Vulkan loader version: ", loaderVersion);
-        printVersion("Requested API version: ", requestedVersion);
-        if (loaderVersion < requestedVersion)
-        {
-            std::cerr << "The loader does not support the requested API version.\n";
-            return false;
-        }
         if (!checkValidationLayerSupport())
         {
             return false;
@@ -114,7 +99,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = requestedVersion;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         const char* requiredExtensions[] = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         auto debugCreateInfo = makeDebugMessengerCreateInfo();
@@ -231,7 +216,10 @@ private:
 
         std::cout << "Selected physical device: " << properties.deviceName << '\n'
                   << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        printVersion("Device API version: ", properties.apiVersion);
+        std::cout << "Device API version: "
+                  << VK_API_VERSION_MAJOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_MINOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_PATCH(properties.apiVersion) << '\n';
         std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
                   << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
                   << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
@@ -369,33 +357,7 @@ private:
         std::cout << '\n';
         return true;
     }
-
-    bool createDescriptorSetLayout()
-    {
-        std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
-        for (std::uint32_t i = 0; i < bindings.size(); ++i)
-        {
-            bindings[i].binding = i;
-            bindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
-            bindings[i].descriptorCount = 1;
-            bindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
-        }
-
-        vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-        descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout
-        std::cout << "Descriptor set layout created: 3 storage-buffer bindings.\n";
-        return true;
-    }
-
-    static void printVersion(const char* label, std::uint32_t version)
-    {
-        std::cout << label
-                  << VK_API_VERSION_MAJOR(version) << '.'
-                  << VK_API_VERSION_MINOR(version) << '.'
-                  << VK_API_VERSION_PATCH(version) << '\n';
-    }
+    // TODO: createDescriptorSetLayout() 함수를 추가합니다.
 };
 
 int main()
@@ -408,6 +370,6 @@ int main()
         }
     }
 
-    std::cout << "Descriptor set layout and Vulkan resources destroyed.\n";
+    std::cout << "Buffers, memory, device, debug messenger and instance destroyed.\n";
     return 0;
 }

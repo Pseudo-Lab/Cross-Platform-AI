@@ -215,13 +215,13 @@ CMake는 `main.cpp`를 빌드하고, `glslc`로 `check.comp`를 컴파일합니�
    Windows의 Visual Studio 빌드에서는 다음 명령을 사용합니다.
 
    ```powershell
-   .\build\Debug\env_check.exe
+   .\build\Debug\main.exe
    ```
 
    Linux의 Makefiles 또는 Ninja 빌드에서는 다음 명령을 사용합니다.
 
    ```sh
-   ./build/env_check
+   ./build/main
    ```
 
 프로그램은 `Vulkan loader version:`과 버전 번호를 출력합니다.
@@ -235,7 +235,7 @@ CMake는 `main.cpp`를 빌드하고, `glslc`로 `check.comp`를 컴파일합니�
 |---|---|
 | 장치 조회 | `vulkaninfo`에 GPU 이름과 1.3 이상의 API 버전이 표시됨 |
 | 레이어 설치 | `vulkaninfo`에 `VK_LAYER_KHRONOS_validation`이 표시됨 |
-| C++ 빌드와 실행 | `env_check`가 1.3 이상의 로더 버전을 출력하고 종료 코드 0을 반환함 |
+| C++ 빌드와 실행 | `main`이 1.3 이상의 로더 버전을 출력하고 종료 코드 0을 반환함 |
 | 셰이더 컴파일 | 컴파일 오류 없이 `check.comp.spv`가 생성됨 |
 
 이 결과로 도구 설치 상태를 확인합니다.

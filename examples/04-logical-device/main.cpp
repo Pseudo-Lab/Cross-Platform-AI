@@ -27,15 +27,12 @@ private:
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice physicalDevice = nullptr;
     std::uint32_t computeQueueFamilyIndex = 0;
-    vk::raii::Device device = nullptr;
-    vk::raii::Queue computeQueue = nullptr;
+    // TODO: device와 computeQueue 멤버를 추가합니다.
 
     bool initVulkan()
     {
-        return createInstance()
-            && setupDebugMessenger()
-            && pickPhysicalDevice()
-            && createLogicalDevice();
+        // TODO: 마지막에 createLogicalDevice() 호출을 연결합니다.
+        return createInstance() && setupDebugMessenger() && pickPhysicalDevice();
     }
 
     bool checkValidationLayerSupport()
@@ -54,22 +51,6 @@ private:
 
     bool createInstance()
     {
-        constexpr auto requestedVersion = VK_API_VERSION_1_3;
-
-        if (!context.getDispatcher()->vkEnumerateInstanceVersion)
-        {
-            std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
-            return false;
-        }
-
-        const auto loaderVersion = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
-        printVersion("Vulkan loader version: ", loaderVersion);
-        printVersion("Requested API version: ", requestedVersion);
-        if (loaderVersion < requestedVersion)
-        {
-            std::cerr << "The loader does not support the requested API version.\n";
-            return false;
-        }
         if (!checkValidationLayerSupport())
         {
             return false;
@@ -97,7 +78,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = requestedVersion;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         const char* requiredExtensions[] = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         auto debugCreateInfo = makeDebugMessengerCreateInfo();
@@ -214,7 +195,10 @@ private:
 
         std::cout << "Selected physical device: " << properties.deviceName << '\n'
                   << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        printVersion("Device API version: ", properties.apiVersion);
+        std::cout << "Device API version: "
+                  << VK_API_VERSION_MAJOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_MINOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_PATCH(properties.apiVersion) << '\n';
         std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
                   << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
                   << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
@@ -225,35 +209,7 @@ private:
                   << "maxComputeWorkGroupInvocations: " << limits.maxComputeWorkGroupInvocations << '\n'
                   << "maxStorageBufferRange: " << limits.maxStorageBufferRange << " bytes\n";
     }
-
-    bool createLogicalDevice()
-    {
-        const float queuePriority = 1.0f;
-        vk::DeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.queueFamilyIndex = computeQueueFamilyIndex;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        vk::PhysicalDeviceFeatures enabledFeatures{};
-        vk::DeviceCreateInfo createInfo{};
-        createInfo.queueCreateInfoCount = 1;
-        createInfo.pQueueCreateInfos = &queueCreateInfo;
-        createInfo.pEnabledFeatures = &enabledFeatures;
-
-        device = vk::raii::Device(physicalDevice, createInfo); // C API: vkCreateDevice
-        computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, 0); // C API: vkGetDeviceQueue
-        std::cout << "Logical device created.\n"
-                  << "Compute queue ready: family " << computeQueueFamilyIndex << ", queue 0.\n";
-        return true;
-    }
-
-    static void printVersion(const char* label, std::uint32_t version)
-    {
-        std::cout << label
-                  << VK_API_VERSION_MAJOR(version) << '.'
-                  << VK_API_VERSION_MINOR(version) << '.'
-                  << VK_API_VERSION_PATCH(version) << '\n';
-    }
+    // TODO: createLogicalDevice()를 추가합니다.
 };
 
 int main()
@@ -266,6 +222,7 @@ int main()
         }
     }
 
-    std::cout << "Device, debug messenger and instance destroyed.\n";
+    // TODO: 논리적 디바이스가 해제되었음을 출력하도록 메시지를 바꿉니다.
+    std::cout << "Debug messenger and instance destroyed.\n";
     return 0;
 }

@@ -214,13 +214,13 @@ A compiler error stops the build.
    For a Windows Visual Studio build, use this command:
 
    ```powershell
-   .\build\Debug\env_check.exe
+   .\build\Debug\main.exe
    ```
 
    For a Linux Makefiles or Ninja build, use this command:
 
    ```sh
-   ./build/env_check
+   ./build/main
    ```
 
 The program prints `Vulkan loader version:` and a version number.
@@ -234,7 +234,7 @@ If the loader version is below 1.3, it reports an error and returns exit code 1.
 |---|---|
 | Device discovery | `vulkaninfo` lists your GPU with API version 1.3 or later |
 | Layer installation | `vulkaninfo` lists `VK_LAYER_KHRONOS_validation` |
-| C++ build and execution | `env_check` prints a loader version of 1.3 or later and returns exit code 0 |
+| C++ build and execution | `main` prints a loader version of 1.3 or later and returns exit code 0 |
 | Shader compilation | The build creates `check.comp.spv` without compiler errors |
 
 These results confirm the tool installation.

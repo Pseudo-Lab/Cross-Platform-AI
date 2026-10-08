@@ -7,6 +7,7 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 ## 튜토리얼
 
 예제는 Vulkan-Hpp의 `vk::raii`를 사용합니다. C API 함수와 1:1로 대응하는 호출에만 함수명을 주석으로 표기합니다.
+01장부터는 각 장의 `main.cpp`를 열고 README의 코드 블록을 따라 채워 나갑니다. 완성본은 `examples/completed/`에 모아 별도로 공개합니다.
 각 예제는 해당 폴더에서 CMake로 독립적으로 빌드합니다. 빌드 명령은 각 장의 문서를 따릅니다.
 
 1. [00. 환경 설정](examples/00-env-settings/README.md) · [English](examples/00-env-settings/README-en.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
@@ -15,7 +16,7 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 4. [03. Physical devices와 queue families](examples/03-physical-devices/README.md) — 장치 기능·한계 조회, GPU와 compute 큐 패밀리 선택
 5. [04. Logical device와 queues](examples/04-logical-device/README.md) — 논리 장치 생성, 사용할 기능 지정, compute queue 준비
 6. [05. Buffer와 memory](examples/05-buffers-memory/README.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
-7. [06. Descriptor set layout](examples/06-descriptor-layout/README.md) — SSBO, set·binding, `std430`, 레이아웃 생성
+7. [06. Descriptor set layout](examples/06-descriptor-layout/README.md) — 바인딩별 리소스 종류·개수·셰이더 단계, 레이아웃 생성
 8. [07. Descriptor pool과 sets](examples/07-descriptor-sets/README.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
 
 ## 다루는 내용

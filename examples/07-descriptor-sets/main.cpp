@@ -7,7 +7,7 @@
 #include <iostream>
 #include <optional>
 #include <utility>
-#include <vector>
+// TODO: <vector> 헤더를 추가합니다.
 
 class ComputeApplication
 {
@@ -24,6 +24,7 @@ public:
 
 private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
+
     static_assert(sizeof(float) == 4);
     static constexpr std::uint32_t elementCount = 8;
     static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
@@ -45,19 +46,17 @@ private:
     BufferResource inputB;
     BufferResource output;
     vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
-    vk::raii::DescriptorPool descriptorPool = nullptr;
-    std::vector<vk::raii::DescriptorSet> descriptorSets;
+    // TODO: descriptorPool과 descriptorSets 멤버를 추가합니다.
 
     bool initVulkan()
     {
+        // TODO: 레이아웃 다음에 createDescriptorPool(), createDescriptorSets()를 호출합니다.
         return createInstance()
             && setupDebugMessenger()
             && pickPhysicalDevice()
             && createLogicalDevice()
             && createStorageBuffers()
-            && createDescriptorSetLayout()
-            && createDescriptorPool()
-            && createDescriptorSets();
+            && createDescriptorSetLayout();
     }
 
     bool checkValidationLayerSupport()
@@ -76,22 +75,6 @@ private:
 
     bool createInstance()
     {
-        constexpr auto requestedVersion = VK_API_VERSION_1_3;
-
-        if (!context.getDispatcher()->vkEnumerateInstanceVersion)
-        {
-            std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
-            return false;
-        }
-
-        const auto loaderVersion = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
-        printVersion("Vulkan loader version: ", loaderVersion);
-        printVersion("Requested API version: ", requestedVersion);
-        if (loaderVersion < requestedVersion)
-        {
-            std::cerr << "The loader does not support the requested API version.\n";
-            return false;
-        }
         if (!checkValidationLayerSupport())
         {
             return false;
@@ -119,7 +102,7 @@ private:
         appInfo.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-        appInfo.apiVersion = requestedVersion;
+        appInfo.apiVersion = VK_API_VERSION_1_3;
 
         const char* requiredExtensions[] = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
         auto debugCreateInfo = makeDebugMessengerCreateInfo();
@@ -236,7 +219,10 @@ private:
 
         std::cout << "Selected physical device: " << properties.deviceName << '\n'
                   << "Device type: " << vk::to_string(properties.deviceType) << '\n';
-        printVersion("Device API version: ", properties.apiVersion);
+        std::cout << "Device API version: "
+                  << VK_API_VERSION_MAJOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_MINOR(properties.apiVersion) << '.'
+                  << VK_API_VERSION_PATCH(properties.apiVersion) << '\n';
         std::cout << "Compute queue family index: " << computeQueueFamilyIndex << '\n'
                   << "Queues in selected family: " << queueFamilies[computeQueueFamilyIndex].queueCount << '\n'
                   << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n'
@@ -374,7 +360,6 @@ private:
         std::cout << '\n';
         return true;
     }
-
     bool createDescriptorSetLayout()
     {
         std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
@@ -393,64 +378,7 @@ private:
         std::cout << "Descriptor set layout created: 3 storage-buffer bindings.\n";
         return true;
     }
-
-    bool createDescriptorPool()
-    {
-        vk::DescriptorPoolSize poolSize{};
-        poolSize.type = vk::DescriptorType::eStorageBuffer;
-        poolSize.descriptorCount = 3;
-
-        vk::DescriptorPoolCreateInfo poolInfo{};
-        poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
-        poolInfo.maxSets = 1;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
-        descriptorPool = vk::raii::DescriptorPool(device, poolInfo); // C API: vkCreateDescriptorPool
-        std::cout << "Descriptor pool created: 1 set, 3 storage-buffer descriptors.\n";
-        return true;
-    }
-
-    bool createDescriptorSets()
-    {
-        const vk::DescriptorSetLayout layout = *descriptorSetLayout;
-        vk::DescriptorSetAllocateInfo allocInfo{};
-        allocInfo.descriptorPool = *descriptorPool;
-        allocInfo.descriptorSetCount = 1;
-        allocInfo.pSetLayouts = &layout;
-        descriptorSets = device.allocateDescriptorSets(allocInfo); // C API: vkAllocateDescriptorSets
-
-        std::array<vk::DescriptorBufferInfo, 3> bufferInfos{};
-        bufferInfos[0].buffer = *inputA.buffer;
-        bufferInfos[1].buffer = *inputB.buffer;
-        bufferInfos[2].buffer = *output.buffer;
-        for (auto& bufferInfo : bufferInfos)
-        {
-            bufferInfo.offset = 0;
-            bufferInfo.range = bufferSize;
-        }
-
-        std::array<vk::WriteDescriptorSet, 3> writes{};
-        for (std::uint32_t i = 0; i < writes.size(); ++i)
-        {
-            writes[i].dstSet = *descriptorSets[0];
-            writes[i].dstBinding = i;
-            writes[i].dstArrayElement = 0;
-            writes[i].descriptorType = vk::DescriptorType::eStorageBuffer;
-            writes[i].descriptorCount = 1;
-            writes[i].pBufferInfo = &bufferInfos[i];
-        }
-        device.updateDescriptorSets(writes, {}); // C API: vkUpdateDescriptorSets
-        std::cout << "Descriptor set updated: bindings 0, 1, 2 -> inputA, inputB, output.\n";
-        return true;
-    }
-
-    static void printVersion(const char* label, std::uint32_t version)
-    {
-        std::cout << label
-                  << VK_API_VERSION_MAJOR(version) << '.'
-                  << VK_API_VERSION_MINOR(version) << '.'
-                  << VK_API_VERSION_PATCH(version) << '\n';
-    }
+    // TODO: createDescriptorPool(), createDescriptorSets() 함수를 추가합니다.
 };
 
 int main()
@@ -463,6 +391,6 @@ int main()
         }
     }
 
-    std::cout << "Descriptor sets, pool, layout and Vulkan resources destroyed.\n";
+    std::cout << "Buffers, memory, device, debug messenger and instance destroyed.\n";
     return 0;
 }

@@ -8,8 +8,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Vulkan 1.3 REQUIRED)
 
 add_executable(logical_device_example main.cpp)
-target_link_libraries(logical_device_example PRIVATE Vulkan::Vulkan ${CMAKE_DL_LIBS})
-
-if(MSVC)
-    target_compile_options(logical_device_example PRIVATE /utf-8)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../completed/04-logical-device.cpp")
+    add_executable(logical_device_completed EXCLUDE_FROM_ALL ../completed/04-logical-device.cpp)
+    set_target_properties(logical_device_completed PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/completed")
 endif()
+
+foreach(target logical_device_example logical_device_completed)
+    if(NOT TARGET ${target})
+        continue()
+    endif()
+    set_target_properties(${target} PROPERTIES OUTPUT_NAME main)
+    target_link_libraries(${target} PRIVATE Vulkan::Vulkan ${CMAKE_DL_LIBS})
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /utf-8)
+    endif()
+endforeach()

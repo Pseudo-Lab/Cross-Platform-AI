@@ -12,6 +12,7 @@ endif()
 find_package(Vulkan 1.3 REQUIRED COMPONENTS glslc)
 
 add_executable(env_check main.cpp)
+set_target_properties(env_check PROPERTIES OUTPUT_NAME main)
 target_link_libraries(env_check PRIVATE Vulkan::Vulkan ${CMAKE_DL_LIBS})
 
 set(SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/check.comp")

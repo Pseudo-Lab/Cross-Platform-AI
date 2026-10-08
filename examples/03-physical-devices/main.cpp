@@ -12,7 +12,6 @@ public:
         {
             return false;
         }
-        submitDebugMessage();
         return true;
     }
 

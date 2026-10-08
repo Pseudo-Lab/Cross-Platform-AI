@@ -8,8 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Vulkan 1.3 REQUIRED)
 
 add_executable(physical_devices main.cpp)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../completed/03-physical-devices.cpp")
-    add_executable(physical_devices_completed EXCLUDE_FROM_ALL ../completed/03-physical-devices.cpp)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../99-completed/03-physical-devices.cpp")
+    add_executable(physical_devices_completed EXCLUDE_FROM_ALL ../99-completed/03-physical-devices.cpp)
     set_target_properties(physical_devices_completed PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/completed")
 endif()

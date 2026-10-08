@@ -17,7 +17,6 @@ public:
         {
             return false;
         }
-        submitDebugMessage();
         return true;
     }
 
@@ -134,17 +133,6 @@ private:
         debugMessenger = instance.createDebugUtilsMessengerEXT(makeDebugMessengerCreateInfo()); // C API: vkCreateDebugUtilsMessengerEXT
         std::cout << "Debug messenger created.\n";
         return true;
-    }
-
-    void submitDebugMessage()
-    {
-        vk::DebugUtilsMessengerCallbackDataEXT callbackData{};
-        callbackData.pMessageIdName = "tutorial.callback-check";
-        callbackData.pMessage = "Application-injected callback check; this is not a validation error.";
-        instance.submitDebugUtilsMessageEXT( // C API: vkSubmitDebugUtilsMessageEXT
-            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
-            vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral,
-            callbackData);
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

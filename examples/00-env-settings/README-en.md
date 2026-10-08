@@ -173,60 +173,133 @@ For other Linux systems, use the [LunarG Linux SDK guide](https://vulkan.lunarg.
 4. Find your GPU name and confirm that its `apiVersion` is 1.3 or later.
 5. Find `VK_LAYER_KHRONOS_validation` in the layer list.
 
+## Follow the example code
+
+With the tools installed, open [main.cpp](main.cpp) to see how the installation is checked. The code in this lesson is already written. Inside `main()`, it accesses the loader, queries the supported version, and checks that version against the tutorial's requirement.
+
+First, include the headers for Vulkan-Hpp and console output. Later lessons also use `vulkan_raii.hpp` to manage Vulkan objects.
+
+```cpp
+#include <vulkan/vulkan_raii.hpp>
+#include <iostream>
+```
+
+The first line of `main()` creates a `Context` that provides access to Vulkan loader functions.
+
+```cpp
+vk::raii::Context context;
+```
+
+Before querying the version, check whether the loader provides the version query function. Older loaders may lack it, so an empty function pointer causes the program to print an error and exit.
+
+```cpp
+if (!context.getDispatcher()->vkEnumerateInstanceVersion)
+{
+    std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
+    return 1;
+}
+```
+
+If the function is available, retrieve the supported version. This query can run before an instance is created.
+
+```cpp
+const auto version = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
+```
+
+`version` is an integer containing the version information. Extract the major, minor, and patch values to print them.
+
+```cpp
+std::cout << "Vulkan loader version: "
+          << VK_API_VERSION_MAJOR(version) << '.'
+          << VK_API_VERSION_MINOR(version) << '.'
+          << VK_API_VERSION_PATCH(version) << '\n';
+```
+
+Finally, check for Vulkan 1.3 or later, which this tutorial requires. A lower version produces exit code 1. If the check passes and execution reaches the end of `main()`, the exit code is 0.
+
+```cpp
+if (version < VK_API_VERSION_1_3)
+{
+    std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
+    return 1;
+}
+```
+
+## Prepare the shader for compilation
+
+The shader compiler needs checking alongside the C++ program. [check.comp](check.comp) is a compute shader. Its first line specifies the GLSL version.
+
+```glsl
+#version 450
+```
+
+The next line sets the size of a workgroup. Setting x, y, and z to 1 gives each group one invocation.
+
+```glsl
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+```
+
+The entry function has an empty body because this shader only checks compilation.
+
+```glsl
+void main()
+{
+}
+```
+
+During the build, `CMakeLists.txt` calls `glslc` to convert this file to SPIR-V. The output file is `build/check.comp.spv`. This lesson checks shader compilation; code that submits work to the GPU comes in later lessons.
+
 ## Build and run the example
 
-1. Open a terminal in this example's directory (`examples/00-env-settings`).
-   From the repository root, use this command to change directories.
+From the repository root, change to the example directory. The `CMakeLists.txt` in this directory builds the example independently.
 
-   ```sh
-   cd examples/00-env-settings
-   ```
+```sh
+cd examples/00-env-settings
+```
 
-2. Configure the project in a new build directory.
+### Windows
 
-   `-S .` sets the current directory as the source directory.
-   This example builds independently with the `CMakeLists.txt` in its directory.
+First, configure the project with the Visual Studio generator. `-S .` selects the current source directory, and `-B build` selects the directory for build output.
 
-   On Windows, use this command:
+```powershell
+cmake -S . -B build
+```
 
-   ```sh
-   cmake -S . -B build
-   ```
+Next, build the `env_check` target in the Debug configuration. This compiles both the C++ program and the shader.
 
-   On Linux, use this command:
+```powershell
+cmake --build build --config Debug --target env_check
+```
 
-   ```sh
-   cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-   ```
+After the build succeeds, run the generated program.
 
-3. Build the example.
+```powershell
+.\build\Debug\main.exe
+```
 
-   ```sh
-   cmake --build build --config Debug --target env_check
-   ```
+### Linux
 
-CMake builds `main.cpp` and compiles `check.comp` with `glslc`.
-The shader output is `build/check.comp.spv`.
-A compiler error stops the build.
+For Makefiles or Ninja, select Debug during configuration.
 
-4. Run the program.
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+```
 
-   For a Windows Visual Studio build, use this command:
+Once configuration finishes, build the C++ program and the shader.
 
-   ```powershell
-   .\build\Debug\main.exe
-   ```
+```sh
+cmake --build build --target env_check
+```
 
-   For a Linux Makefiles or Ninja build, use this command:
+These generators place the executable directly in `build`.
 
-   ```sh
-   ./build/main
-   ```
+```sh
+./build/main
+```
 
-The program prints `Vulkan loader version:` and a version number.
-If the loader version is below 1.3, it reports an error and returns exit code 1.
-`vk::raii::Context` provides access to the loader functions.
-`enumerateInstanceVersion()` returns the loader API version without creating an instance.
+### Expected output
+
+If the program prints `Vulkan loader version:` followed by version 1.3 or later and exits successfully, the loader version check has passed. Also check that shader compilation created `build/check.comp.spv`.
 
 ## Completion criteria
 

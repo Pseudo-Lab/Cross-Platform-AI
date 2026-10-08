@@ -8,8 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Vulkan 1.3 REQUIRED)
 
 add_executable(validation_layers main.cpp)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../completed/02-validation-layers.cpp")
-    add_executable(validation_layers_completed EXCLUDE_FROM_ALL ../completed/02-validation-layers.cpp)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../99-completed/02-validation-layers.cpp")
+    add_executable(validation_layers_completed EXCLUDE_FROM_ALL ../99-completed/02-validation-layers.cpp)
     set_target_properties(validation_layers_completed PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/completed")
 endif()

@@ -2,79 +2,107 @@
 
 [이전: 버퍼와 메모리](../05-buffers-memory/README.md) · [다음: 디스크립터 풀과 셋](../07-descriptor-sets/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-이전 장에서 입력 두 개와 출력을 담을 버퍼를 만들었습니다. 그렇다면 셰이더는 이 버퍼들에 어떻게 접근할까요? Vulkan에서는 디스크립터(descriptor)를 통해 버퍼나 이미지 같은 리소스를 셰이더에 연결합니다.
+이전 장에서 입력 두 개와 출력을 담을 버퍼를 만들었습니다. 그렇다면 셰이더는 이 버퍼들에 어떻게 접근할까요? Vulkan에서는 디스크립터(Descriptor)를 통해 버퍼나 이미지 같은 리소스를 셰이더에 연결합니다.
 
-먼저 셰이더가 사용할 리소스의 유형을 디스크립터 셋 레이아웃(descriptor set layout)으로 정의하겠습니다. 실제 버퍼를 연결하는 작업은 다음 장에서 이어집니다.
+버퍼를 연결하기 전에, 셰이더가 어떤 유형의 리소스를 몇 개 사용할지 정해야 합니다. 이 구조를 정의하는 것이 디스크립터 셋 레이아웃(Descriptor set layout)입니다. 이번 장에서는 입력 두 개와 출력 하나를 위한 레이아웃을 만들겠습니다.
 
-[main.cpp](main.cpp)는 이전 장의 완성 코드에서 시작합니다. 아래 설명을 따라 TODO를 채워 보겠습니다. 완성된 코드는 공개 후 `examples/completed/06-descriptor-layout.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)를 열고, 이전 장에서 만든 버퍼 아래에 레이아웃을 추가해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/06-descriptor-layout.cpp`에서 확인할 수 있습니다.
 
-## 코드 구조
+## 레이아웃을 보관할 자리 만들기
 
-기존의 `createStorageBuffers()`까지는 버퍼를 만들고 CPU에서 데이터를 써 보는 과정입니다. 여기에 `createDescriptorSetLayout()`을 추가하겠습니다. `initVulkan()`을 다음과 같이 바꿉니다.
-
-```cpp
-bool initVulkan()
-{
-    return createInstance()
-        && setupDebugMessenger()
-        && pickPhysicalDevice()
-        && createLogicalDevice()
-        && createStorageBuffers()
-        && createDescriptorSetLayout();
-}
-```
-
-`private` 안에서 `BufferResource output;` 바로 아래에 레이아웃을 보관할 멤버를 추가합니다.
+레이아웃은 다음 장에서 디스크립터 셋을 할당할 때도 사용합니다. 함수가 끝나도 남아 있도록 `private` 영역의 `BufferResource output;` 바로 아래에 멤버를 추가합니다.
 
 ```cpp
 vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
 ```
 
-이제 클래스 끝의 TODO 위치에 함수를 추가합니다. 다음 두 절의 코드를 주석 위치에 순서대로 넣겠습니다.
+처음에는 빈 RAII 객체로 두고, 생성 정보를 채운 뒤 실제 레이아웃을 저장하겠습니다. 클래스 끝의 TODO 위치에는 생성 함수의 틀을 만듭니다.
 
 ```cpp
 bool createDescriptorSetLayout()
 {
-    // 바인딩을 정의합니다.
-    // 레이아웃을 생성하고 true를 반환합니다.
 }
 ```
 
-## 바인딩 정의하기
+## 바인딩 번호 정하기
 
-바인딩(binding)은 디스크립터 셋 안에서 리소스를 구분하는 번호입니다. 입력 `inputA`에 0, 입력 `inputB`에 1, 출력 `output`에 2를 사용하겠습니다. 각 번호에 어떤 디스크립터를 둘지는 `vk::DescriptorSetLayoutBinding`으로 설명합니다. 함수의 첫 번째 주석을 다음 코드로 채웁니다.
+디스크립터 셋 안에서 리소스를 구분하는 번호를 바인딩(Binding)이라고 합니다. 우리는 0번에 입력 `inputA`, 1번에 입력 `inputB`, 2번에 출력 `output`을 연결할 예정입니다. 셰이더에서도 같은 번호로 각각의 버퍼를 참조하게 됩니다.
+
+먼저 함수 안에 각 바인딩의 정보를 담을 배열을 만듭니다. `vk::DescriptorSetLayoutBinding` 하나가 바인딩 하나를 설명하므로 배열의 길이는 3입니다. `<array>`와 `<cstdint>`는 이전 장에서 이미 포함했습니다.
 
 ```cpp
 std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
+```
+
+세 바인딩은 번호만 다르고 모두 스토리지 버퍼 하나를 사용합니다. 같은 설정을 반복해서 적지 않도록 배열 아래에 반복문을 추가합니다.
+
+```cpp
 for (std::uint32_t i = 0; i < bindings.size(); ++i)
 {
-    bindings[i].binding = i;
-    bindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
-    bindings[i].descriptorCount = 1;
-    bindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
+    // 이 번호의 바인딩에 들어갈 리소스를 정의합니다.
 }
 ```
 
-`binding`에는 셰이더에서 사용할 번호를 넣습니다. 앞서 만든 버퍼가 스토리지 버퍼이므로 `descriptorType`은 `eStorageBuffer`입니다. `stageFlags`는 이 리소스를 어느 셰이더 단계에서 참조할지 지정하며, 여기서는 컴퓨트 셰이더만 사용합니다.
+반복문 안의 주석을 다음 코드로 바꿉니다. 배열 인덱스 `i`를 바인딩 번호로 사용하고, 이전 장에서 만든 버퍼에 맞춰 디스크립터 유형을 정합니다.
 
-`descriptorCount`는 해당 바인딩에 들어갈 디스크립터의 개수입니다. 버퍼 안의 `float`가 여덟 개여도, 바인딩 하나가 가리키는 버퍼는 하나이므로 1로 설정합니다. `<array>`와 `<cstdint>`는 이전 장에서 이미 포함했습니다.
+```cpp
+bindings[i].binding = i;
+bindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
+```
 
-## 레이아웃 생성하기
+이제 각 번호에 스토리지 버퍼가 들어간다는 것을 정했습니다. 이어서 같은 반복문 안에 바인딩당 디스크립터 개수를 추가합니다.
 
-이제 바인딩 배열을 하나의 레이아웃으로 묶겠습니다. 반복문 아래의 두 번째 주석을 다음 코드로 바꿉니다.
+```cpp
+bindings[i].descriptorCount = 1;
+```
+
+`descriptorCount`는 버퍼 안의 원소 개수가 아닙니다. 버퍼에 `float`가 여덟 개 들어 있어도, 바인딩 하나가 참조할 버퍼는 하나이므로 1입니다. 세 버퍼를 각각 다른 바인딩에 연결하므로 여기서 3을 넣지 않습니다.
+
+마지막으로 이 바인딩에 접근할 셰이더 단계를 지정합니다. 우리는 컴퓨트 셰이더에서 버퍼를 사용할 것이므로, 개수 설정 바로 아래에 다음 줄을 추가합니다.
+
+```cpp
+bindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
+```
+
+여기까지 작성하면 반복문이 0, 1, 2번 바인딩을 같은 유형·개수·셰이더 단계로 채웁니다. 입력과 출력의 용도가 달라도 모두 스토리지 버퍼 디스크립터를 사용합니다.
+
+## 바인딩들을 레이아웃으로 묶기
+
+바인딩 배열을 준비했으니 Vulkan에 전달할 생성 정보를 만들겠습니다. 반복문이 끝난 뒤, 함수가 끝나기 전에 다음 코드를 추가합니다.
 
 ```cpp
 vk::DescriptorSetLayoutCreateInfo layoutInfo{};
 layoutInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
 layoutInfo.pBindings = bindings.data();
+```
+
+`bindingCount`는 배열에 들어 있는 바인딩 정보의 개수입니다. `pBindings`는 그 배열의 시작을 가리킵니다. 앞서 바인딩 하나에 설정한 `descriptorCount`와는 세는 대상이 다릅니다.
+
+이제 논리적 디바이스와 생성 정보를 RAII 생성자에 전달합니다. 생성된 레이아웃은 앞에서 선언한 멤버에 저장합니다.
+
+```cpp
 descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout
+```
+
+레이아웃을 만들 때 바인딩 정보가 전달되므로, 지역 변수인 `bindings`와 `layoutInfo`를 계속 보관할 필요는 없습니다. 함수의 마지막에는 생성 결과를 출력하고 성공을 반환합니다.
+
+```cpp
 std::cout << "Descriptor set layout created: 3 storage-buffer bindings.\n";
 return true;
 ```
 
-`bindingCount`는 바인딩 배열의 길이이고, `pBindings`는 그 배열을 가리킵니다. `vk::raii::DescriptorSetLayout` 생성자에 논리 디바이스와 생성 정보를 전달하면 레이아웃이 만들어집니다.
+여기까지의 코드에는 `inputA.buffer` 같은 실제 버퍼 핸들이 등장하지 않았습니다. 레이아웃은 각 번호에 들어갈 리소스의 유형과 개수를 정의합니다. 다음 장에서는 이 구조를 따르는 디스크립터 셋을 할당하고 각 번호에 실제 버퍼를 연결하겠습니다.
 
-여기에는 아직 `inputA.buffer` 같은 버퍼 핸들이 등장하지 않습니다. 레이아웃은 각 번호에 어떤 유형의 리소스가 들어갈지 정의합니다. 다음 장에서는 이 레이아웃으로 디스크립터 셋을 할당하고 실제 버퍼를 지정하겠습니다. 파이프라인을 만들 때도 이 레이아웃을 사용하게 됩니다.
+## 초기화 순서에 연결하기
+
+함수가 완성됐으니 초기화 과정에서 호출하겠습니다. `initVulkan()`의 끝부분의 `&& createStorageBuffers();` 한 줄을 다음 두 줄로 바꿉니다. 앞서 작성한 인스턴스·장치 초기화 호출은 그대로 이어집니다.
+
+```cpp
+    && createStorageBuffers()
+    && createDescriptorSetLayout();
+```
+
+버퍼 생성까지 성공하면 레이아웃 생성이 실행됩니다. `&&`로 연결했으므로 앞 단계에서 `false`를 반환하면 뒤의 호출은 실행되지 않습니다.
 
 ## 빌드와 실행
 

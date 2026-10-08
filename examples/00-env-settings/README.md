@@ -174,60 +174,133 @@ NVIDIA GPU에는 호환되는 NVIDIA 드라이버가 필요합니다.
 5. 레이어 목록에서 `VK_LAYER_KHRONOS_validation`을 확인합니다.
 
 
+## 예제 코드 따라가기
+
+도구가 준비됐다면 [main.cpp](main.cpp)를 열어 설치 상태를 어떻게 검사하는지 보겠습니다. 이 장의 코드는 이미 작성되어 있습니다. `main()` 안에서 로더에 접근하고, 지원 버전을 조회한 뒤 필요한 버전인지 확인하는 순서입니다.
+
+먼저 Vulkan-Hpp와 콘솔 출력에 필요한 헤더를 포함합니다. `vulkan_raii.hpp`는 이후 장에서도 Vulkan 객체를 관리할 때 사용할 헤더입니다.
+
+```cpp
+#include <vulkan/vulkan_raii.hpp>
+#include <iostream>
+```
+
+`main()`의 첫 줄에서는 Vulkan 로더 함수에 접근할 `Context`를 만듭니다.
+
+```cpp
+vk::raii::Context context;
+```
+
+버전을 묻기 전에, 로더가 버전 조회 함수를 제공하는지 확인합니다. 오래된 로더에서는 이 함수가 없을 수 있으므로, 함수 포인터가 비어 있으면 오류를 출력하고 종료합니다.
+
+```cpp
+if (!context.getDispatcher()->vkEnumerateInstanceVersion)
+{
+    std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
+    return 1;
+}
+```
+
+함수를 사용할 수 있다면 지원 버전을 가져옵니다. 이 조회는 인스턴스를 만들기 전에도 할 수 있습니다.
+
+```cpp
+const auto version = context.enumerateInstanceVersion(); // C API: vkEnumerateInstanceVersion
+```
+
+`version`은 버전 정보가 담긴 정수입니다. major, minor, patch를 각각 꺼내 화면에 출력합니다.
+
+```cpp
+std::cout << "Vulkan loader version: "
+          << VK_API_VERSION_MAJOR(version) << '.'
+          << VK_API_VERSION_MINOR(version) << '.'
+          << VK_API_VERSION_PATCH(version) << '\n';
+```
+
+마지막으로 이 튜토리얼에서 사용할 Vulkan 1.3 이상인지 확인합니다. 조건을 만족하지 못하면 종료 코드 1로 실패를 알립니다. 조건을 통과해 `main()` 끝에 도달하면 종료 코드는 0입니다.
+
+```cpp
+if (version < VK_API_VERSION_1_3)
+{
+    std::cerr << "This example requires a Vulkan 1.3 or newer loader.\n";
+    return 1;
+}
+```
+
+## 셰이더 컴파일 준비하기
+
+C++ 프로그램과 함께 셰이더 컴파일러도 확인하겠습니다. [check.comp](check.comp)는 컴퓨트 셰이더이며, 첫 줄은 사용할 GLSL 버전을 지정합니다.
+
+```glsl
+#version 450
+```
+
+그다음에는 작업 그룹 하나의 크기를 지정합니다. 여기서는 x, y, z를 모두 1로 두어 그룹 하나에 실행 단위 하나를 둡니다.
+
+```glsl
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+```
+
+컴파일이 되는지 확인할 용도이므로 진입 함수의 본문은 비워 둡니다.
+
+```glsl
+void main()
+{
+}
+```
+
+이제 빌드하면 `CMakeLists.txt`가 `glslc`를 호출해 이 파일을 SPIR-V로 변환합니다. 출력 파일은 `build/check.comp.spv`입니다. 이 장에서는 셰이더를 컴파일하는 데까지 확인하며, GPU에 제출하는 코드는 이후 장에서 작성합니다.
+
 ## 예제 빌드와 실행
 
-1. 이 예제의 디렉터리(`examples/00-env-settings`)에서 터미널을 엽니다.
-   저장소 루트에서 시작했다면 다음 명령으로 이동합니다.
+저장소 루트에서 예제 폴더로 이동합니다. 이 폴더의 `CMakeLists.txt`로 독립적으로 빌드할 수 있습니다.
 
-   ```sh
-   cd examples/00-env-settings
-   ```
+```sh
+cd examples/00-env-settings
+```
 
-2. 새 빌드 디렉터리에 프로젝트를 구성합니다.
+### Windows
 
-   `-S .`은 현재 디렉터리를 소스 디렉터리로 지정합니다.
-   이 예제는 해당 폴더의 `CMakeLists.txt`만으로 독립적으로 빌드합니다.
+먼저 Visual Studio 생성기로 프로젝트를 구성합니다. `-S .`은 현재 폴더의 소스를, `-B build`는 빌드 결과를 저장할 폴더를 지정합니다.
 
-   Windows에서는 다음 명령을 사용합니다.
+```powershell
+cmake -S . -B build
+```
 
-   ```sh
-   cmake -S . -B build
-   ```
+이어서 Debug 구성의 `env_check` 대상을 빌드합니다. C++ 프로그램과 셰이더가 함께 컴파일됩니다.
 
-   Linux에서는 다음 명령을 사용합니다.
+```powershell
+cmake --build build --config Debug --target env_check
+```
 
-   ```sh
-   cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-   ```
+빌드가 성공하면 생성된 프로그램을 실행합니다.
 
-3. 예제를 빌드합니다.
+```powershell
+.\build\Debug\main.exe
+```
 
-   ```sh
-   cmake --build build --config Debug --target env_check
-   ```
+### Linux
 
-CMake는 `main.cpp`를 빌드하고, `glslc`로 `check.comp`를 컴파일합니다.
-셰이더 출력 파일은 `build/check.comp.spv`입니다.
-컴파일 오류가 발생하면 빌드가 중단됩니다.
+Makefiles 또는 Ninja 생성기를 사용할 때는 구성 단계에서 Debug를 지정합니다.
 
-4. 프로그램을 실행합니다.
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+```
 
-   Windows의 Visual Studio 빌드에서는 다음 명령을 사용합니다.
+구성이 끝나면 C++ 프로그램과 셰이더를 빌드합니다.
 
-   ```powershell
-   .\build\Debug\main.exe
-   ```
+```sh
+cmake --build build --target env_check
+```
 
-   Linux의 Makefiles 또는 Ninja 빌드에서는 다음 명령을 사용합니다.
+이 생성기에서는 실행 파일이 `build` 바로 아래에 생깁니다.
 
-   ```sh
-   ./build/main
-   ```
+```sh
+./build/main
+```
 
-프로그램은 `Vulkan loader version:`과 버전 번호를 출력합니다.
-로더가 Vulkan 1.3 미만이면 오류 메시지와 종료 코드 1을 반환합니다.
-`vk::raii::Context`는 로더 함수에 접근할 수 있게 합니다.
-`enumerateInstanceVersion()`은 instance를 생성하지 않고 로더의 API 버전을 반환합니다.
+### 실행 결과
+
+`Vulkan loader version:` 뒤에 1.3 이상의 버전이 출력되고 정상 종료하면 로더 버전 검사를 통과한 것입니다. 셰이더 컴파일 결과인 `build/check.comp.spv`도 함께 생성되었는지 확인합니다.
 
 ## 완료 기준
 

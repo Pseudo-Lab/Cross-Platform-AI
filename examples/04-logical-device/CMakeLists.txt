@@ -8,8 +8,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Vulkan 1.3 REQUIRED)
 
 add_executable(logical_device_example main.cpp)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../completed/04-logical-device.cpp")
-    add_executable(logical_device_completed EXCLUDE_FROM_ALL ../completed/04-logical-device.cpp)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../99-completed/04-logical-device.cpp")
+    add_executable(logical_device_completed EXCLUDE_FROM_ALL ../99-completed/04-logical-device.cpp)
     set_target_properties(logical_device_completed PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/completed")
 endif()

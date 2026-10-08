@@ -299,7 +299,7 @@ These generators place the executable directly in `build`.
 
 ### Expected output
 
-If the program prints `Vulkan loader version:` followed by version 1.3 or later and exits successfully, the loader version check has passed. Also check that shader compilation created `build/check.comp.spv`.
+Check whether the printed loader version meets the tutorial's required version. Also check that shader compilation created `build/check.comp.spv`.
 
 ## Completion criteria
 

@@ -300,7 +300,7 @@ cmake --build build --target env_check
 
 ### 실행 결과
 
-`Vulkan loader version:` 뒤에 1.3 이상의 버전이 출력되고 정상 종료하면 로더 버전 검사를 통과한 것입니다. 셰이더 컴파일 결과인 `build/check.comp.spv`도 함께 생성되었는지 확인합니다.
+출력된 로더 버전이 튜토리얼의 요구 버전을 만족하는지 확인합니다. 셰이더 컴파일 결과인 `build/check.comp.spv`도 함께 생성되었는지 확인합니다.
 
 ## 완료 기준
 

@@ -84,10 +84,11 @@ layoutInfo.pBindings = bindings.data();
 descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout
 ```
 
-레이아웃을 만들 때 바인딩 정보가 전달되므로, 지역 변수인 `bindings`와 `layoutInfo`를 계속 보관할 필요는 없습니다. 함수의 마지막에는 생성 결과를 출력하고 성공을 반환합니다.
+레이아웃을 만들 때 바인딩 정보가 전달되므로, 지역 변수인 `bindings`와 `layoutInfo`를 계속 보관할 필요는 없습니다. 함수의 마지막에는 `bindings.size()`로 배열의 실제 바인딩 개수를 출력하고 성공을 반환합니다.
 
 ```cpp
-std::cout << "Descriptor set layout created: 3 storage-buffer bindings.\n";
+std::cout << "Descriptor set layout created: " << bindings.size()
+          << " bindings.\n";
 return true;
 ```
 
@@ -148,12 +149,7 @@ cmake --build build --target descriptor_layout_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 레이아웃 생성 결과와 종료 메시지가 출력됩니다.
-
-```text
-Descriptor set layout created: 3 storage-buffer bindings.
-Descriptor set layout destroyed.
-```
+레이아웃 생성 결과에 표시된 바인딩 개수를 자신이 작성한 `bindings` 배열의 크기와 비교해 보세요. 바인딩마다 지정한 리소스 유형도 함께 확인합니다.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

@@ -280,18 +280,25 @@ bool createStorageBuffers()
 }
 ```
 
-함수 안에서 각 멤버를 전달해 버퍼와 메모리를 만듭니다. 하나라도 실패하면 이후 초기화로 진행하지 않습니다.
+함수 안에 생성할 버퍼들의 주소를 모읍니다. 배열 크기는 나열한 원소에서 결정되며, 뒤에서 생성한 버퍼 개수를 출력할 때도 이 배열을 사용하겠습니다.
 
 ```cpp
-if (!createBuffer(bufferSize, inputA)
-    || !createBuffer(bufferSize, inputB)
-    || !createBuffer(bufferSize, output))
+const std::array buffers = {&inputA, &inputB, &output};
+```
+
+이제 배열을 순회하며 각 버퍼와 메모리를 만듭니다. 하나라도 실패하면 이후 초기화로 진행하지 않습니다.
+
+```cpp
+for (auto* buffer : buffers)
 {
-    return false;
+    if (!createBuffer(bufferSize, *buffer))
+    {
+        return false;
+    }
 }
 ```
 
-버퍼를 만들었으니 기록할 값을 준비하겠습니다. `if`문 아래에 입력 배열 두 개와 출력 초기값 배열을 만듭니다.
+버퍼를 만들었으니 기록할 값을 준비하겠습니다. 반복문 아래에 입력 배열 두 개와 출력 초기값 배열을 만듭니다.
 
 ```cpp
 std::array<float, elementCount> valuesA{};
@@ -323,7 +330,8 @@ if (!writeAndVerifyBuffer(inputA, valuesA, "Input A")
 각 호출은 데이터를 기록하고 다시 읽어 비교합니다. 모두 성공했다면 함수 마지막에서 준비가 끝났음을 출력합니다.
 
 ```cpp
-std::cout << "Host-visible storage buffers ready: 3 x " << bufferSize << " bytes.\n"
+std::cout << "Host-visible storage buffers ready: " << buffers.size()
+          << " x " << bufferSize << " bytes.\n"
           << "CPU write/readback verified. No GPU dispatch yet.\n";
 return true;
 ```
@@ -389,16 +397,7 @@ cmake --build build --target buffers_memory_completed
 
 ### 실행 결과
 
-코드를 모두 채우면 메모리 요구사항에 이어 다음 값이 출력됩니다. 메모리 유형 인덱스와 정렬 크기는 장치에 따라 다릅니다.
-
-```text
-Input A: 0 1 2 3 4 5 6 7
-Input B: 10 11 12 13 14 15 16 17
-Output (initial): 0 0 0 0 0 0 0 0
-Host-visible storage buffers ready: 3 x 32 bytes.
-CPU write/readback verified. No GPU dispatch yet.
-Buffers and memory destroyed.
-```
+입력 버퍼를 다시 읽은 값이 코드에서 준비한 배열과 같은지 확인합니다. 출력 버퍼의 초기값과 버퍼당 바이트 크기도 직접 계산한 값과 비교해 보세요. 메모리 유형과 정렬 크기는 장치에 따라 달라집니다.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

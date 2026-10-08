@@ -80,7 +80,18 @@ descriptorPool = vk::raii::DescriptorPool(device, poolInfo); // C API: vkCreateD
 생성한 풀은 멤버에 저장됩니다. 이제 다른 함수에서도 이 풀을 사용해 셋을 할당할 수 있습니다. 함수 끝에는 결과를 출력하고 성공을 반환합니다.
 
 ```cpp
-std::cout << "Descriptor pool created: 1 set, 3 storage-buffer descriptors.\n";
+std::cout << "Descriptor pool created: max sets " << poolInfo.maxSets << '\n';
+```
+
+유형별 디스크립터 용량은 생성 정보에 연결한 항목들을 순회하며 출력합니다. 용량 설정을 바꾸면 출력에도 같은 값이 반영됩니다.
+
+```cpp
+for (std::uint32_t i = 0; i < poolInfo.poolSizeCount; ++i)
+{
+    const auto& capacity = poolInfo.pPoolSizes[i];
+    std::cout << "  " << vk::to_string(capacity.type)
+              << ": " << capacity.descriptorCount << " descriptors\n";
+}
 return true;
 ```
 
@@ -198,10 +209,38 @@ device.updateDescriptorSets(writes, {}); // C API: vkUpdateDescriptorSets
 
 첫 번째 인수는 방금 채운 갱신 항목들입니다. 두 번째 인수에는 다른 디스크립터에서 복사할 항목을 전달할 수 있지만, 여기서는 사용하지 않아 빈 목록 `{}`을 넘깁니다.
 
-이 호출은 버퍼 속 데이터를 복사하는 것이 아니라 셋이 해당 버퍼 영역을 참조하도록 설정합니다. 버퍼 데이터는 이전 장에서 메모리에 써 두었습니다. 함수 마지막에 결과 출력과 반환을 추가합니다.
+이 호출은 버퍼 속 데이터를 복사하는 것이 아니라 셋이 해당 버퍼 영역을 참조하도록 설정합니다. 버퍼 데이터는 이전 장에서 메모리에 써 두었습니다. 함수 마지막에서는 할당받은 셋 개수를 컨테이너에서 읽어 출력합니다.
 
 ```cpp
-std::cout << "Descriptor set updated: bindings 0, 1, 2 -> inputA, inputB, output.\n";
+std::cout << "Descriptor sets updated: " << descriptorSets.size() << '\n';
+```
+
+어느 바인딩에 무엇을 연결했는지도 확인하겠습니다. 갱신에 사용한 `writes`를 순회하면서 실제 바인딩 번호와 유형, 개수를 출력합니다.
+
+```cpp
+for (const auto& write : writes)
+{
+    std::cout << "Binding " << write.dstBinding << ": "
+              << vk::to_string(write.descriptorType) << ", "
+              << write.descriptorCount << " descriptors\n";
+    // 이 바인딩이 참조하는 버퍼 영역을 출력합니다.
+}
+```
+
+반복문 안의 주석을 다음 코드로 바꿉니다. 버퍼 핸들은 해당 리소스를 식별하며 실행마다 달라질 수 있습니다. 오프셋과 범위는 위에서 디스크립터에 설정한 값입니다.
+
+```cpp
+for (std::uint32_t i = 0; i < write.descriptorCount; ++i)
+{
+    const auto& info = write.pBufferInfo[i];
+    std::cout << "  Buffer " << static_cast<VkBuffer>(info.buffer)
+              << ", offset " << info.offset << ", range " << info.range << " bytes\n";
+}
+```
+
+바깥 반복문까지 끝난 뒤 성공을 반환합니다.
+
+```cpp
 return true;
 ```
 
@@ -263,13 +302,7 @@ cmake --build build --target descriptor_sets_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 풀 생성, 셋 갱신 결과와 종료 메시지가 출력됩니다.
-
-```text
-Descriptor pool created: 1 set, 3 storage-buffer descriptors.
-Descriptor set updated: bindings 0, 1, 2 -> inputA, inputB, output.
-Descriptor sets and pool destroyed.
-```
+풀에서 제공하는 셋·디스크립터 용량을 확인합니다. 갱신 결과에서는 각 바인딩이 의도한 입력·출력 버퍼에 연결되었는지 코드와 대조해 보세요.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

@@ -211,11 +211,13 @@ private:
 
     bool createStorageBuffers()
     {
-        if (!createBuffer(bufferSize, inputA)
-            || !createBuffer(bufferSize, inputB)
-            || !createBuffer(bufferSize, output))
+        const std::array buffers = {&inputA, &inputB, &output};
+        for (auto* buffer : buffers)
         {
-            return false;
+            if (!createBuffer(bufferSize, *buffer))
+            {
+                return false;
+            }
         }
 
         std::array<float, elementCount> valuesA{};

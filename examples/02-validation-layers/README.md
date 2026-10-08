@@ -362,14 +362,7 @@ cmake --build build --target validation_layers_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 레이어 활성화, messenger 생성과 확인용 콜백 메시지가 출력됩니다.
-
-```text
-Validation layer enabled: VK_LAYER_KHRONOS_validation
-Debug messenger created.
-[debug Warning { General }] tutorial.callback-check: Application-injected callback check; this is not a validation error.
-Debug messenger and instance destroyed.
-```
+활성화한 레이어 이름과 Debug messenger 생성 여부를 확인합니다. 직접 제출한 메시지가 콜백에 도착했다면 심각도·종류·본문이 함께 출력되어야 합니다.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

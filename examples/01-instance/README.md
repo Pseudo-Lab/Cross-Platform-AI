@@ -168,12 +168,7 @@ cmake --build build --target instance_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 확장 목록 뒤에 다음 두 줄이 출력됩니다. 종료 메시지만으로는 구현 완료를 확인할 수 없으므로 확장 목록과 `Instance created.`도 함께 확인합니다.
-
-```text
-Instance created.
-Instance destroyed.
-```
+사용 가능한 인스턴스 확장 목록이 출력되는지 확인합니다. 인스턴스 생성 뒤 해제 메시지가 나오는지도 확인해 보세요.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

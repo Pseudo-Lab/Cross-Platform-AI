@@ -89,16 +89,18 @@ device = vk::raii::Device(physicalDevice, createInfo); // C API: vkCreateDevice
 이때 `queueCreateInfo`로 요청했던 큐도 함께 생성됩니다. 다만 프로그램에서 사용할 큐 핸들은 아직 가져오지 않았습니다. 다음 줄에서 그 핸들을 `computeQueue`에 저장합니다.
 
 ```cpp
-computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, 0); // C API: vkGetDeviceQueue
+const std::uint32_t queueIndex = 0;
+computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, queueIndex); // C API: vkGetDeviceQueue
 ```
 
-두 번째 인수는 패밀리 인덱스, 세 번째 인수는 **그 패밀리 안에서의 큐 인덱스**입니다. 큐 하나를 요청했으므로 가져올 큐의 인덱스는 0입니다. 이 호출은 큐를 하나 더 만드는 것이 아니라 앞에서 생성한 큐를 가져옵니다.
+두 번째 인수는 패밀리 인덱스, 세 번째 인수는 **그 패밀리 안에서의 큐 인덱스**입니다. 큐 하나를 요청했으므로 `queueIndex`를 0으로 둡니다. 이 값을 큐를 가져올 때와 결과를 출력할 때 함께 사용합니다. 이 호출은 큐를 하나 더 만드는 것이 아니라 앞에서 생성한 큐를 가져옵니다.
 
 함수 마지막에는 생성 결과를 출력하고 성공을 반환합니다.
 
 ```cpp
 std::cout << "Logical device created.\n"
-          << "Compute queue ready: family " << computeQueueFamilyIndex << ", queue 0.\n";
+          << "Compute queue ready: family " << queueCreateInfo.queueFamilyIndex
+          << ", queue " << queueIndex << ".\n";
 return true;
 ```
 
@@ -166,13 +168,7 @@ cmake --build build --target logical_device_completed
 
 ### 실행 결과
 
-코드를 모두 채웠다면 다음 메시지가 출력됩니다. 큐 패밀리 인덱스는 장치에 따라 다릅니다.
-
-```text
-Logical device created.
-Compute queue ready: family 0, queue 0.
-Device destroyed.
-```
+논리적 디바이스가 생성되고 큐 핸들을 가져왔는지 확인합니다. 출력된 패밀리 번호가 장치 선택 단계에서 저장한 인덱스와 같은지 살펴보세요.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

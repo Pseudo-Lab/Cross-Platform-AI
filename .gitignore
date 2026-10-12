@@ -1,69 +1,19 @@
-# Prerequisites
-*.d
+# Ignore everything unless explicitly allowed.
+*
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+!/.gitignore
+!/.gitmodules
+!/LICENSE
+!/README.md
 
-# Precompiled Headers
-*.gch
-*.pch
+# Tutorial sources and documentation.
+!/examples/
+!/examples/[0-9][0-9]-*/
+!/examples/[0-9][0-9]-*/CMakeLists.txt
+!/examples/[0-9][0-9]-*/README*.md
+!/examples/[0-9][0-9]-*/*.cpp
+!/examples/[0-9][0-9]-*/*.comp
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
-
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Build directories
-build/
-Build/
-build-*/
-
-# CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-install_manifest.txt
-compile_commands.json
-
-# Temporary files
-*.tmp
-*.log
-*.bak
-*.swp
-
-# vcpkg
-vcpkg_installed/
-
-# debug information files
-*.dwo
-
-# test output & cache
-Testing/
-.cache/
+# Submodule.
+!/external/
+!/external/eva/

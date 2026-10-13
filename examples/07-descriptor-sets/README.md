@@ -1,6 +1,6 @@
 # 07. 디스크립터 풀과 셋
 
-[이전: 디스크립터 셋 레이아웃](../06-descriptor-layout/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 디스크립터 셋 레이아웃](../06-descriptor-layout/README.md) · [다음: Compute shader](../08-compute-shader/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 이전 장에서는 0, 1, 2번 바인딩에 스토리지 버퍼가 하나씩 들어간다는 것을 레이아웃으로 정의했습니다. 이제 그 구조를 따르는 디스크립터 셋(Descriptor set)을 할당하고, 각 바인딩에 입력과 출력 버퍼를 연결하겠습니다.
 

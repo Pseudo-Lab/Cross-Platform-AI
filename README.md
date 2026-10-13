@@ -18,6 +18,14 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 6. [05. Buffer와 memory](examples/05-buffers-memory/README.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
 7. [06. Descriptor set layout](examples/06-descriptor-layout/README.md) — 바인딩별 리소스 종류·개수·셰이더 단계, 레이아웃 생성
 8. [07. Descriptor pool과 sets](examples/07-descriptor-sets/README.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
+9. [08. Compute shader](examples/08-compute-shader/README.md) — 벡터 덧셈 GLSL, workgroup과 범위 검사, SPIR-V 로드와 shader module
+10. [09. Compute pipeline](examples/09-compute-pipeline/README.md) — pipeline layout, push constant 범위, compute pipeline 생성
+11. [10. Command buffers](examples/10-command-buffers/README.md) — 명령 버퍼 할당, pipeline·descriptor·push constant 바인딩, dispatch 기록
+12. [11. Dispatch와 동기화](examples/11-dispatch-synchronization/README.md) — 큐 제출, barrier와 fence, CPU 정답 검증, 입력을 바꿔 재실행
+13. [12. Staging buffers](examples/12-staging-buffers/README.md) — 전송용·연산용 버퍼 분리, 복사와 transfer ↔ compute 동기화
+14. [13. Multiple dispatches](examples/13-multiple-dispatches/README.md) — 중간 버퍼와 두 descriptor set, compute → compute 동기화, 연속 연산 검증
+
+11장까지는 첫 GPU 벡터 덧셈을 완성합니다. 12장은 데이터 전송을 분리하고, 13장은 GPU에 남아 있는 중간 결과를 다음 연산으로 연결합니다.
 
 ## 다루는 내용
 

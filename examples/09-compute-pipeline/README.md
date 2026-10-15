@@ -1,10 +1,10 @@
 # 09. 컴퓨트 파이프라인
 
-[이전: 컴퓨트 셰이더](../08-compute-shader/README.md) · [다음: 명령 버퍼](../10-command-buffers/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 컴퓨트 셰이더](../08-compute-shader/README.md) · [다음: 커맨드 버퍼](../10-command-buffers/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 이전 장에서 벡터 덧셈 셰이더를 SPIR-V로 컴파일하고 셰이더 모듈을 만들었습니다. 이번에는 셰이더가 사용할 리소스 구조와 진입 함수를 지정해 컴퓨트 파이프라인(Compute pipeline)을 만들겠습니다.
 
-파이프라인 레이아웃(Pipeline layout)은 디스크립터 셋 레이아웃과 푸시 상수의 범위를 정의합니다. 컴퓨트 파이프라인은 이 레이아웃과 실행할 컴퓨트 셰이더를 연결합니다.
+파이프라인 레이아웃(Pipeline layout)은 디스크립터 셋 레이아웃과 푸시 상수의 범위를 정의합니다. 컴퓨트 파이프라인은 이 레이아웃과 셰이더의 진입 함수를 묶어 GPU에서 실행할 연산을 준비합니다. 생성 과정에 장치별 컴파일·최적화 비용이 들 수 있으므로 보통 한 번 만든 파이프라인을 여러 디스패치에서 재사용합니다. [파이프라인과 컴파일](https://docs.vulkan.org/guide/latest/pipeline_cache.html)
 
 [main.cpp](main.cpp)에는 08장까지의 코드가 들어 있습니다. TODO 위치에 두 객체와 생성 함수를 추가합니다. 완성된 코드는 공개 후 `examples/99-completed/09-compute-pipeline.cpp`에서 확인할 수 있습니다. [add.comp](add.comp)와 셰이더 빌드 규칙은 이전 장과 같습니다.
 
@@ -18,7 +18,7 @@
 | `pipelineLayout` | 셋 0의 레이아웃, 컴퓨트 단계에서 읽을 4바이트 푸시 상수 |
 | `computePipeline` | 위 레이아웃을 사용하는 셰이더 모듈의 `main` 진입 함수 |
 
-디스크립터 셋에는 실제 버퍼 참조가 들어 있지만, 파이프라인 레이아웃에는 그 구조만 들어갑니다. 10장에서 명령을 기록할 때 파이프라인과 디스크립터 셋을 각각 바인딩합니다.
+디스크립터 셋에는 실제 버퍼 참조가 들어 있고, 파이프라인 레이아웃에는 그 구조만 들어갑니다. 이렇게 분리하면 같은 바인딩 구조를 유지하는 한 입력·출력 버퍼가 달라져도 파이프라인을 다시 만들 필요가 없습니다. 10장에서 명령을 기록할 때 파이프라인과 디스크립터 셋을 각각 바인딩합니다.
 
 ## 파이프라인을 보관할 자리 만들기
 
@@ -50,7 +50,7 @@ pushConstantRange.size = sizeof(std::uint32_t);
 
 `stageFlags`는 값을 읽을 셰이더 단계, `offset`은 푸시 상수 영역 안의 시작 바이트, `size`는 사용할 바이트 수입니다. 이 예제의 GLSL `uint`와 C++ `std::uint32_t`는 4바이트이므로 오프셋 0부터 4바이트를 컴퓨트 단계에 노출합니다.
 
-범위를 정의하는 것과 값을 전달하는 것은 별개입니다. 이 코드는 `count`의 저장 범위를 선언하고, `elementCount`의 실제 값은 10장에서 명령 버퍼에 기록합니다. 푸시 상수의 `offset`과 `size`는 4바이트 배수여야 하며, 사용할 범위는 장치의 `maxPushConstantsSize` 안에 있어야 합니다. 여기서는 `uint` 하나만 사용합니다.
+범위를 정의하는 것과 값을 전달하는 것은 별개입니다. 이 코드는 `count`의 저장 범위를 선언하고, `elementCount`의 실제 값은 10장에서 커맨드 버퍼에 기록합니다. 푸시 상수의 `offset`과 `size`는 4바이트 배수여야 하며, 사용할 범위는 장치의 `maxPushConstantsSize` 안에 있어야 합니다. 여기서는 `uint` 하나만 사용합니다.
 
 ## 셋 0의 레이아웃 연결하기
 
@@ -76,7 +76,7 @@ layoutInfo.pPushConstantRanges = &pushConstantRange;
 
 ## 파이프라인 레이아웃 생성하기
 
-생성 정보를 완성했으니 논리적 디바이스에서 레이아웃을 생성합니다.
+생성 정보를 완성했으니 논리 디바이스에서 레이아웃을 생성합니다.
 
 ```cpp
 pipelineLayout = vk::raii::PipelineLayout(device, layoutInfo); // C API: vkCreatePipelineLayout
@@ -119,9 +119,9 @@ pipelineInfo.stage = stageInfo;
 pipelineInfo.layout = *pipelineLayout;
 ```
 
-컴퓨트 파이프라인에는 컴퓨트 셰이더 단계 하나를 지정합니다. 이 예제에서 쓰는 스토리지 버퍼 바인딩과 푸시 상수는 모두 `pipelineInfo.layout`이 설명하는 구조와 일치해야 합니다.
+컴퓨트 파이프라인에는 컴퓨트 셰이더 단계 하나를 지정합니다. 배열 연산을 직접 실행하므로 그래픽스 파이프라인의 정점 입력과 래스터라이제이션 설정이 필요하지 않습니다. 이 예제에서 쓰는 스토리지 버퍼 바인딩과 푸시 상수는 모두 `pipelineInfo.layout`이 설명하는 구조와 일치해야 합니다.
 
-이제 RAII 생성자에 논리적 디바이스와 생성 정보를 전달합니다.
+이제 RAII 생성자에 논리 디바이스와 생성 정보를 전달합니다.
 
 ```cpp
 computePipeline = vk::raii::Pipeline(device, nullptr, pipelineInfo); // C API: vkCreateComputePipelines
@@ -148,7 +148,7 @@ return true;
     && createComputePipeline();
 ```
 
-셰이더 모듈과 파이프라인 레이아웃이 준비된 다음 파이프라인을 생성합니다. 여기까지는 실행할 프로그램과 리소스 구조를 정의한 것입니다. 다음 장에서 이 파이프라인, 디스크립터 셋, 원소 수를 명령 버퍼에 기록하겠습니다.
+셰이더 모듈과 파이프라인 레이아웃이 준비된 다음 파이프라인을 생성합니다. 여기까지는 실행할 프로그램과 리소스 구조를 정의한 것입니다. 다음 장에서 이 파이프라인, 디스크립터 셋, 원소 수를 커맨드 버퍼에 기록하겠습니다.
 
 ## 빌드와 실행
 

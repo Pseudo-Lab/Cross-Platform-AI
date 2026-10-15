@@ -1,6 +1,6 @@
-# 01. Instance 생성과 해제
+# 01. 인스턴스 생성과 해제
 
-[이전: 환경 설정](../00-env-settings/README.md) · [다음: Validation layers](../02-validation-layers/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 환경 설정](../00-env-settings/README.md) · [다음: 검증 레이어](../02-validation-layers/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
 Vulkan을 사용하려면 먼저 인스턴스(Instance)를 생성해야 합니다. 인스턴스는 애플리케이션과 Vulkan 라이브러리를 연결합니다. 생성할 때 프로그램 정보와 사용할 API 버전을 전달해 보겠습니다.
 
@@ -120,9 +120,9 @@ void initVulkan()
 
 ## 인스턴스가 해제되는 시점 확인하기
 
-`vk::raii` 객체는 수명이 끝날 때 자신이 관리하는 Vulkan 자원을 해제합니다. 시작 코드의 `main()`에는 `app`을 감싼 안쪽 블록과 종료 출력이 준비되어 있습니다. 이 블록이 끝나면 멤버가 선언의 역순으로 소멸하므로 인스턴스가 먼저 해제되고, 그 뒤에 `Instance destroyed.`가 출력됩니다.
+`vk::raii` 객체는 수명이 끝날 때 자신이 관리하는 Vulkan 리소스를 해제합니다. 시작 코드의 `main()`에는 `app`을 감싼 안쪽 블록과 종료 출력이 준비되어 있습니다. 이 블록이 끝나면 멤버가 선언의 역순으로 소멸하므로 인스턴스가 먼저 해제되고, 그 뒤에 `Instance destroyed.`가 출력됩니다.
 
-다음 장에서는 Vulkan 사용 중 생기는 경고와 오류를 받을 Validation layer를 추가하겠습니다.
+다음 장에서는 Vulkan 사용 중 생기는 경고와 오류를 받을 검증 레이어를 추가하겠습니다.
 
 ## 빌드와 실행
 
@@ -174,4 +174,4 @@ cmake --build build --target instance_completed
 
 ---
 
-이 문서는 [Khronos Vulkan Tutorial: Base code](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/00_Base_code.html)와 [Instance](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html)를 컴퓨트 실습에 맞게 번역·각색했습니다. 원문과 이 문서는 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)을 따릅니다.
+이 문서는 [Khronos Vulkan Tutorial: Base code](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/00_Base_code.html)와 [인스턴스](https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/01_Instance.html)를 컴퓨트 실습에 맞게 번역·각색했습니다. 원문과 이 문서는 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)을 따릅니다.

@@ -1,14 +1,16 @@
-# 10. Command buffers
+# 10. 커맨드 버퍼
 
-[이전: Compute pipeline](../09-compute-pipeline/README.md) · [다음: Dispatch와 동기화](../11-dispatch-synchronization/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 컴퓨트 파이프라인](../09-compute-pipeline/README.md) · [다음: 디스패치와 동기화](../11-dispatch-synchronization/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-09장에서 연산에 사용할 컴퓨트 파이프라인을 만들었습니다. 이 장에서는 파이프라인과 디스크립터 셋을 바인딩하고, 원소 수를 전달한 뒤 dispatch하는 명령을 커맨드 버퍼(Command buffer)에 기록합니다.
+09장에서 연산에 사용할 컴퓨트 파이프라인을 만들었습니다. 이 장에서는 파이프라인과 디스크립터 셋을 바인딩하고, 원소 수를 전달한 뒤 디스패치(Dispatch) 명령을 커맨드 버퍼(Command buffer)에 기록합니다.
+
+명령을 먼저 기록해 묶어서 제출하면 CPU가 GPU 작업마다 완료를 기다릴 필요가 없습니다. 연산 순서와 리소스가 같다면 기록도 재사용할 수 있어, 다음 장에서는 입력 데이터만 바꿔 같은 커맨드 버퍼를 다시 제출합니다.
 
 [main.cpp](main.cpp)의 TODO를 순서대로 채웁니다. 여기서는 기록까지만 마치며, 큐에 제출하고 계산 결과를 확인하는 과정은 다음 장에서 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/10-command-buffers.cpp`에서 확인할 수 있습니다.
 
 ## 풀과 커맨드 버퍼 보관하기
 
-커맨드 풀(Command pool)은 커맨드 버퍼를 할당하는 객체입니다. `private` 영역의 `computePipeline` 뒤 TODO를 다음 멤버로 바꿉니다.
+커맨드 풀(Command pool)은 명령 기록에 필요한 메모리를 모아 관리하고, 커맨드 버퍼를 할당하는 객체입니다. 같은 풀의 기록용 메모리를 재사용하거나 함께 초기화할 수 있도록 할당 단위를 분리한 것입니다. `private` 영역의 `computePipeline` 뒤 TODO를 다음 멤버로 바꿉니다.
 
 ```cpp
 vk::raii::CommandPool commandPool = nullptr;
@@ -38,7 +40,7 @@ return true;
 
 `flags`에는 별도 값을 넣지 않습니다. 명령을 한 번 기록해 두고 재제출할 것이므로, 커맨드 버퍼를 개별적으로 초기화해 다시 기록하는 기능은 필요하지 않습니다.
 
-## Primary 커맨드 버퍼 할당하기
+## 프라이머리 커맨드 버퍼 할당하기
 
 풀 생성 함수 다음에 할당 함수의 틀을 추가합니다.
 
@@ -86,7 +88,7 @@ bool recordCommandBuffer()
 }
 ```
 
-함수 안에서 X 방향 워크그룹 수를 먼저 계산합니다. 한 그룹이 64개의 invocation을 실행하므로, 원소 수를 그룹 크기로 나누어 올림합니다.
+함수 안에서 X 방향 워크그룹 수를 먼저 계산합니다. 한 그룹이 64개의 인보케이션을 실행하므로, 원소 수를 그룹 크기로 나누어 올림합니다.
 
 ```cpp
 const std::uint32_t groupCount = (elementCount + workgroupSize - 1) / workgroupSize;
@@ -125,7 +127,7 @@ cmd.begin(beginInfo); // C API: vkBeginCommandBuffer
 cmd.bindPipeline(vk::PipelineBindPoint::eCompute, *computePipeline); // C API: vkCmdBindPipeline
 ```
 
-`eCompute`는 컴퓨트 명령이 사용할 파이프라인을 지정한다는 뜻입니다. 뒤에 기록할 dispatch는 이 파이프라인의 셰이더를 사용합니다. [파이프라인 바인딩](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdBindPipeline.html)
+`eCompute`는 컴퓨트 명령이 사용할 파이프라인을 지정한다는 뜻입니다. 뒤에 기록할 디스패치는 이 파이프라인의 셰이더를 사용합니다. [파이프라인 바인딩](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdBindPipeline.html)
 
 이어서 07장에서 입력과 출력 버퍼를 연결한 디스크립터 셋을 바인딩합니다.
 
@@ -136,11 +138,11 @@ cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, *pipelineLayout,
 
 `pipelineLayout`은 09장에서 만든 인터페이스이고, 그 다음의 `0`은 첫 번째로 바인딩할 **셋 번호**입니다. 셰이더의 `set = 0`에 해당하며, 셋 안의 `binding = 0, 1, 2`와 구분해야 합니다. 한 셋 안에 `inputA`, `inputB`, `output`이 모두 들어 있습니다.
 
-마지막 `{}`은 dynamic offset 목록입니다. 이 예제는 일반 스토리지 버퍼 디스크립터를 사용하므로 전달할 dynamic offset이 없습니다. 바인딩은 버퍼 데이터를 복사하지 않고, dispatch가 사용할 셋을 선택합니다. [디스크립터 셋 바인딩](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdBindDescriptorSets.html)
+마지막 `{}`은 동적 오프셋 목록입니다. 이 예제는 일반 스토리지 버퍼 디스크립터를 사용하므로 전달할 동적 오프셋이 없습니다. 바인딩은 버퍼 데이터를 복사하지 않고, 디스패치가 사용할 셋을 선택합니다. [디스크립터 셋 바인딩](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdBindDescriptorSets.html)
 
 ## 원소 수 전달하기
 
-디스크립터 셋을 바인딩한 다음 push constant 값을 기록합니다.
+디스크립터 셋을 바인딩한 다음 푸시 상수 값을 기록합니다.
 
 ```cpp
 const std::uint32_t count = elementCount;
@@ -150,17 +152,17 @@ cmd.pushConstants<std::uint32_t>(*pipelineLayout, vk::ShaderStageFlagBits::eComp
 
 09장에서 레이아웃에 선언한 범위에 실제 값을 넣는 단계입니다. 오프셋 `0`부터 `std::uint32_t` 크기인 4바이트를 전달하며, 셰이더는 이 값을 읽어 유효한 원소 인덱스인지 검사합니다.
 
-push constant의 값은 이 호출에서 커맨드 버퍼에 기록됩니다. 이후 CPU 변수만 바꿔도 기록된 값이 바뀌지는 않습니다. 원소 수를 바꾸려면 해당 값을 포함한 명령을 다시 기록해야 합니다. [Push constant 기록](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPushConstants.html)
+푸시 상수의 값은 이 호출에서 커맨드 버퍼에 기록됩니다. 이후 CPU 변수만 바꿔도 기록된 값이 바뀌지는 않습니다. 원소 수를 바꾸려면 해당 값을 포함한 명령을 다시 기록해야 합니다. [푸시 상수 기록](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPushConstants.html)
 
-## Dispatch 기록하기
+## 디스패치 기록하기
 
-함수 시작에서 계산한 워크그룹 수를 사용해 dispatch를 기록합니다.
+함수 시작에서 계산한 워크그룹 수를 사용해 디스패치를 기록합니다.
 
 ```cpp
 cmd.dispatch(groupCount, 1, 1); // C API: vkCmdDispatch
 ```
 
-`dispatch()`의 인수는 invocation 수가 아니라 **워크그룹 수**입니다. Y와 Z 방향은 각각 한 그룹만 사용합니다. 원소가 65개라면 X 방향으로 두 그룹, 총 128개의 invocation이 필요하며, 65 이상인 인덱스는 셰이더의 범위 검사에서 돌아갑니다. [Dispatch의 그룹 수](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdDispatch.html)
+`dispatch()`의 인수는 인보케이션 수가 아니라 **워크그룹 수**입니다. Y와 Z 방향은 각각 한 그룹만 사용합니다. 원소가 65개라면 X 방향으로 두 그룹, 총 128개의 인보케이션이 필요하며, 65 이상인 인덱스는 셰이더의 범위 검사에서 돌아갑니다. [디스패치의 그룹 수](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdDispatch.html)
 
 마지막으로 기록을 끝냅니다.
 
@@ -241,7 +243,7 @@ Command buffer recorded: 1 workgroups.
 Resources destroyed.
 ```
 
-- Validation error 없이 커맨드 버퍼 기록이 끝납니다.
+- 검증 오류 없이 커맨드 버퍼 기록이 끝납니다.
 - 출력된 워크그룹 수가 `elementCount`를 `workgroupSize`로 나누어 올림한 값과 같습니다.
 - `bindPipeline → bindDescriptorSets → pushConstants → dispatch` 순서와, 기록·제출의 차이를 코드에서 확인할 수 있습니다.
 

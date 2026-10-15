@@ -1,21 +1,21 @@
-# 04. Logical device와 Queue
+# 04. 논리 디바이스와 큐
 
-[이전: Physical devices](../03-physical-devices/README.md) · [다음: Buffers and memory](../05-buffers-memory/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 물리 디바이스와 큐 패밀리](../03-physical-devices/README.md) · [다음: 버퍼와 메모리](../05-buffers-memory/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-이전 장에서는 사용할 물리적 디바이스와 컴퓨트 큐 패밀리를 선택했습니다. 이제 그 장치에 작업을 요청할 논리적 디바이스(Logical device)를 만들 차례입니다. 이때 사용할 기능과 큐 개수를 지정하고, 생성된 큐의 핸들을 가져오겠습니다.
+이전 장에서는 사용할 물리 디바이스와 컴퓨트 큐 패밀리를 선택했습니다. 이제 그 장치에 작업을 요청할 논리 디바이스(Logical device)를 만들 차례입니다. 이때 사용할 기능과 큐 개수를 지정하고, 생성된 큐의 핸들을 가져오겠습니다.
 
 [main.cpp](main.cpp)를 열고 TODO 위치를 따라 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/04-logical-device.cpp`에서 확인할 수 있습니다.
 
 ## 디바이스와 큐를 보관할 자리 만들기
 
-논리적 디바이스와 큐는 초기화가 끝난 뒤에도 사용합니다. `private` 영역의 `computeQueueFamilyIndex` 아래 TODO를 다음 멤버로 바꿉니다.
+논리 디바이스와 큐는 초기화가 끝난 뒤에도 사용합니다. `private` 영역의 `computeQueueFamilyIndex` 아래 TODO를 다음 멤버로 바꿉니다.
 
 ```cpp
 vk::raii::Device device = nullptr;
 vk::raii::Queue computeQueue = nullptr;
 ```
 
-`device`는 논리적 디바이스를, `computeQueue`는 명령을 제출할 큐를 보관합니다. 아직 생성하지 않았으므로 두 객체 모두 `nullptr`로 초기화합니다.
+`device`는 논리 디바이스를, `computeQueue`는 명령을 제출할 큐를 보관합니다. 아직 생성하지 않았으므로 두 객체 모두 `nullptr`로 초기화합니다.
 
 이제 클래스 끝의 TODO 위치에 생성 함수의 틀을 추가합니다. 함수 안에서 큐 생성 정보부터 준비하겠습니다.
 
@@ -27,7 +27,7 @@ bool createLogicalDevice()
 
 ## 생성할 큐 지정하기
 
-03장에서 저장한 `computeQueueFamilyIndex`는 사용할 패밀리의 번호였습니다. 그 패밀리의 큐를 실제로 사용하려면 논리적 디바이스를 만들 때 큐를 요청해야 합니다. 우리는 큐 하나로 시작하겠습니다.
+03장에서 저장한 `computeQueueFamilyIndex`는 사용할 패밀리의 번호였습니다. 그 패밀리의 큐를 실제로 사용하려면 논리 디바이스를 만들 때 큐를 요청해야 합니다. 우리는 큐 하나로 시작하겠습니다.
 
 우선 요청할 큐의 우선순위를 정합니다. `createLogicalDevice()`의 첫 줄에 추가합니다.
 
@@ -60,7 +60,7 @@ vk::PhysicalDeviceFeatures enabledFeatures{};
 
 `{}`로 초기화하면 이 구조체의 기능들은 모두 비활성화됩니다. 예를 들어 이전 장에서 `shaderFloat64`가 지원된다고 출력됐어도 여기서 요청하지 않으면 활성화되지 않습니다.
 
-이제 논리적 디바이스의 생성 정보를 만들고, 준비한 큐 정보를 연결합니다.
+이제 논리 디바이스의 생성 정보를 만들고, 준비한 큐 정보를 연결합니다.
 
 ```cpp
 vk::DeviceCreateInfo createInfo{};
@@ -76,11 +76,11 @@ createInfo.pQueueCreateInfos = &queueCreateInfo;
 createInfo.pEnabledFeatures = &enabledFeatures;
 ```
 
-창에 이미지를 표시하지 않는 컴퓨트 실습이므로 swapchain 같은 디바이스 확장은 추가하지 않습니다.
+창에 이미지를 표시하지 않는 컴퓨트 실습이므로 스왑체인 같은 디바이스 확장은 추가하지 않습니다.
 
 ## 디바이스를 만들고 큐 가져오기
 
-생성 정보가 준비됐습니다. 같은 함수 안에서 선택한 물리적 디바이스와 생성 정보를 전달해 논리적 디바이스를 만듭니다.
+생성 정보가 준비됐습니다. 같은 함수 안에서 선택한 물리 디바이스와 생성 정보를 전달해 논리 디바이스를 만듭니다.
 
 ```cpp
 device = vk::raii::Device(physicalDevice, createInfo); // C API: vkCreateDevice
@@ -106,7 +106,7 @@ return true;
 
 ## 초기화 순서에 연결하기
 
-`createLogicalDevice()`가 완성됐으니 초기화 과정에 연결하겠습니다. 물리적 디바이스와 큐 패밀리를 먼저 선택해야 하므로, 기존 `initVulkan()`을 다음과 같이 바꿉니다.
+`createLogicalDevice()`가 완성됐으니 초기화 과정에 연결하겠습니다. 물리 디바이스와 큐 패밀리를 먼저 선택해야 하므로, 기존 `initVulkan()`을 다음과 같이 바꿉니다.
 
 ```cpp
 bool initVulkan()
@@ -118,9 +118,9 @@ bool initVulkan()
 }
 ```
 
-앞 단계가 실패하면 `&&` 뒤의 함수는 실행되지 않습니다. 장치 선택에 성공한 경우에만 그 장치로 논리적 디바이스를 만듭니다.
+앞 단계가 실패하면 `&&` 뒤의 함수는 실행되지 않습니다. 장치 선택에 성공한 경우에만 그 장치로 논리 디바이스를 만듭니다.
 
-`app`이 소멸하면 RAII 멤버는 선언의 역순으로 정리됩니다. 큐는 논리적 디바이스가 해제될 때 함께 정리되므로 별도의 큐 해제 함수를 호출하지 않습니다.
+`app`이 소멸하면 RAII 멤버는 선언의 역순으로 정리됩니다. 큐는 논리 디바이스가 해제될 때 함께 정리되므로 별도의 큐 해제 함수를 호출하지 않습니다.
 
 여기까지 작성하면 사용할 디바이스와 큐가 준비됩니다. 다음 장에서는 이 디바이스를 통해 연산에 필요한 버퍼와 메모리를 만들겠습니다.
 
@@ -168,7 +168,7 @@ cmake --build build --target logical_device_completed
 
 ### 실행 결과
 
-논리적 디바이스가 생성되고 큐 핸들을 가져왔는지 확인합니다. 출력된 패밀리 번호가 장치 선택 단계에서 저장한 인덱스와 같은지 살펴보세요.
+논리 디바이스가 생성되고 큐 핸들을 가져왔는지 확인합니다. 출력된 패밀리 번호가 장치 선택 단계에서 저장한 인덱스와 같은지 살펴보세요.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

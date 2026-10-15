@@ -11,6 +11,7 @@ set(SHADER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/add.comp")
 set(SHADER_BINARY "${CMAKE_CURRENT_BINARY_DIR}/add.comp.spv")
 add_custom_command(
     OUTPUT "${SHADER_BINARY}"
+    # 고정 워크그룹 크기에서 maintenance4가 필요한 LocalSizeId 생성을 피하도록 SPIR-V 1.3을 지정합니다.
     COMMAND Vulkan::glslc --target-env=vulkan1.3 --target-spv=spv1.3
             "${SHADER_SOURCE}" -o "${SHADER_BINARY}"
     DEPENDS "${SHADER_SOURCE}"

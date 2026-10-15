@@ -43,7 +43,7 @@ for (std::uint32_t i = 0; i < bindings.size(); ++i)
 }
 ```
 
-반복문 안의 주석을 다음 코드로 바꿉니다. 배열 인덱스 `i`를 바인딩 번호로 사용하고, 이전 장에서 만든 버퍼에 맞춰 디스크립터 유형을 정합니다.
+반복문 안의 주석을 다음 코드로 바꿉니다. 배열 인덱스 `i`를 바인딩 번호로 사용하고, 이전 장에서 만든 버퍼에 맞춰 디스크립터 타입을 정합니다.
 
 ```cpp
 bindings[i].binding = i;
@@ -78,7 +78,7 @@ layoutInfo.pBindings = bindings.data();
 
 `bindingCount`는 배열에 들어 있는 바인딩 정보의 개수입니다. `pBindings`는 그 배열의 시작을 가리킵니다. 앞서 바인딩 하나에 설정한 `descriptorCount`와는 세는 대상이 다릅니다.
 
-이제 논리적 디바이스와 생성 정보를 RAII 생성자에 전달합니다. 생성된 레이아웃은 앞에서 선언한 멤버에 저장합니다.
+이제 논리 디바이스와 생성 정보를 RAII 생성자에 전달합니다. 생성된 레이아웃은 앞에서 선언한 멤버에 저장합니다.
 
 ```cpp
 descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout

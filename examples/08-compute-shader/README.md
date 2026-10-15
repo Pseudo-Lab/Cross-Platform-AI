@@ -10,7 +10,7 @@
 
 ## 한 번의 셰이더 실행이 맡을 일
 
-CPU에서 배열을 더한다면 반복문으로 `output[i] = inputA[i] + inputB[i]`를 계산할 수 있습니다. 여기서는 셰이더 실행 하나가 인덱스 하나를 맡습니다. 이 실행 하나를 인보케이션(Invocation), 인보케이션의 묶음을 워크그룹(Workgroup)이라고 합니다.
+CPU에서 배열을 더한다면 반복문으로 `output[i] = inputA[i] + inputB[i]`를 계산할 수 있습니다. 각 원소의 계산이 서로 독립적이므로, GPU에서는 같은 코드를 여러 원소에 병렬로 적용합니다. 이 실행 하나를 인보케이션(Invocation), 인보케이션의 묶음을 워크그룹(Workgroup)이라고 하며, CUDA의 스레드(thread)와 블록(block)에 각각 대응합니다.
 
 `add.comp`의 맨 위에 있는 다음 선언부터 확인합니다.
 
@@ -20,7 +20,7 @@ CPU에서 배열을 더한다면 반복문으로 `output[i] = inputA[i] + inputB
 layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 ```
 
-워크그룹 하나에 X축 방향으로 인보케이션 64개를 배치합니다. `64`는 배열 원소 수가 아닙니다. C++에서 사용하는 `elementCount = 8`과 별개이며, 실행할 워크그룹 수는 10장에서 정합니다. 한 그룹을 실행하면 64개 중 8개만 배열 원소를 계산하도록 범위를 검사하겠습니다.
+워크그룹 하나에 X축 방향으로 인보케이션 64개를 배치합니다. 그룹 크기를 고정하고 입력 크기에 따라 그룹 수를 늘리면 같은 셰이더로 더 큰 배열도 처리할 수 있습니다. 실행할 그룹 수는 [10장 커맨드 버퍼](../10-command-buffers/README.md)에서 정하며, `elementCount = 8`일 때는 한 그룹의 64개 중 8개만 계산하도록 범위를 검사합니다. `64`는 실습용 선택이며 모든 GPU에서 최적인 크기를 뜻하지는 않습니다.
 
 ## 디스크립터 바인딩에 맞춰 버퍼 선언하기
 
@@ -33,9 +33,11 @@ layout(set = 0, binding = 0, std430) readonly buffer InputA
 } inputA;
 ```
 
-`set = 0`은 사용할 디스크립터 셋 번호, `binding = 0`은 그 셋 안의 바인딩 번호입니다. 07장에서 `inputA.buffer`를 연결한 바인딩과 일치합니다. `buffer` 블록은 스토리지 버퍼의 내용을 선언하고, `readonly`는 이 셰이더에서 해당 내용을 읽기만 한다는 뜻입니다.
+`set = 0`은 사용할 디스크립터 셋 번호, `binding = 0`은 그 셋 안의 바인딩 번호입니다. 07장에서 `inputA.buffer`를 연결한 바인딩과 일치합니다. `buffer`는 스토리지 버퍼에 접근하는 블록을 선언하고, 그 안의 `float values[]`는 연결된 바이트들을 `float` 배열로 해석하는 방법을 정합니다. 실제 메모리는 C++에서 이미 할당했습니다.
 
-`std430`은 블록 안 데이터의 배치 규칙입니다. 여기의 `float values[]`는 원소가 4바이트 간격으로 이어져, C++의 `std::array<float, elementCount>`를 복사한 메모리와 맞습니다. 다른 자료형이나 구조체를 사용하면 해당 형식의 정렬과 원소 간격도 맞춰야 합니다.
+`readonly`는 이 변수를 통한 쓰기를 컴파일 오류로 막아 입력을 실수로 덮어쓰지 않게 합니다. 컴파일러에 접근 의도를 알리지만, 붙이는 것만으로 성능 향상을 보장하지는 않습니다. 출력의 `writeonly`도 같은 이유로 읽기를 금지합니다. [GLSL 메모리 한정자](https://docs.vulkan.org/glsl/latest/chapters/variables.html#memory-qualifiers)
+
+`std430`은 메모리 정렬(alignment)과 배열 원소 간격(stride)을 포함한 배치 규칙입니다. 이 규칙에서 `float` 배열의 간격은 4바이트여서 C++의 연속 배열과 맞습니다(`std140`에서는 16바이트). CPU와 셰이더가 간격을 다르게 해석하면 같은 인덱스로 다른 바이트를 읽으므로, 구조체나 벡터를 넣을 때도 정렬·패딩을 맞춰야 합니다. [셰이더 메모리 레이아웃](https://docs.vulkan.org/guide/latest/shader_memory_layout.html)
 
 그 아래의 두 번째 입력과 출력도 같은 구조입니다.
 
@@ -59,7 +61,7 @@ layout(set = 0, binding = 2, std430) writeonly buffer Output
 | 0 | 1 | `inputB.buffer` | `inputB.values[index]` 읽기 |
 | 0 | 2 | `output.buffer` | `resultBuffer.values[index]` 쓰기 |
 
-`values[]`는 블록의 마지막에 놓인 길이 미지정 배열입니다. 선언 자체가 메모리를 할당하지 않습니다. 디스크립터가 가리키는 버퍼 영역 안에서만 접근해야 합니다.
+`values[]`는 스토리지 블록의 마지막 멤버에 사용할 수 있는 GLSL의 런타임 크기 배열입니다. 길이를 소스에 고정하지 않아 버퍼 크기가 달라져도 셰이더를 다시 컴파일할 필요가 없습니다. 이 예제에서 디스크립터에 32바이트를 연결하면 `float` 8개만 접근할 수 있으며, `[]`가 공간을 늘려 주지는 않습니다.
 
 ## 실제 원소 수 받기
 
@@ -72,7 +74,7 @@ layout(push_constant) uniform Parameters
 } params;
 ```
 
-푸시 상수는 원소 수처럼 작은 값을 명령 버퍼에 기록해 셰이더에 전달하는 방법입니다. 별도의 버퍼나 디스크립터 바인딩을 추가하지 않고 `count`를 받습니다. C++에서는 32비트 부호 없는 정수인 `std::uint32_t`로 맞추겠습니다.
+푸시 상수는 원소 수처럼 작은 값을 커맨드 버퍼에 기록해 셰이더에 전달하는 방법입니다. 4바이트의 `count`를 위해 별도 버퍼와 디스크립터를 관리할 필요가 없어 여기서 사용합니다. C++에서는 32비트 부호 없는 정수인 `std::uint32_t`로 맞추겠습니다.
 
 이 선언만으로 `count`에 8이 들어가지는 않습니다. 09장에서 이 값의 크기와 셰이더 접근 범위를 파이프라인 레이아웃에 정의하고, 10장에서 실제 값을 기록합니다.
 
@@ -93,11 +95,13 @@ void main()
 }
 ```
 
-`gl_GlobalInvocationID.x`는 전체 실행에서 이 인보케이션이 맡는 X축 번호입니다. 한 그룹에서는 0~63, 다음 그룹에서는 64~127이 됩니다. `gl_LocalInvocationID.x`를 사용하면 그룹마다 0부터 다시 시작하므로 배열 전체 인덱스로 사용할 수 없습니다.
+`gl_LocalInvocationID.x`는 **그룹 안의 번호**여서 모든 그룹에서 0~63입니다. `gl_GlobalInvocationID.x`는 **전체 디스패치 안의 번호**로, `gl_WorkGroupID.x * 64 + gl_LocalInvocationID.x`입니다. 따라서 두 번째 그룹의 로컬 번호 0은 글로벌 번호 64에 해당합니다. 배열 인덱스에 로컬 번호만 쓰면 모든 그룹이 같은 0~63번 원소를 처리하므로 여기서는 글로벌 번호를 사용합니다.
 
 범위 검사는 버퍼를 읽기 전에 수행합니다. `count = 8`이면 0~7번만 덧셈을 하고 나머지는 종료합니다. 각 인보케이션이 서로 다른 출력 원소에 쓰고 다른 인보케이션의 계산 결과를 읽지 않으므로, 이 셰이더 안에서는 인보케이션 사이의 동기화가 필요하지 않습니다.
 
 ## GLSL을 SPIR-V로 빌드하기
+
+SPIR-V는 GPU 제조사에 독립적인 중간 표현(IR)입니다. GLSL을 공통 바이너리로 변환해 전달하고, 드라이버가 이를 해당 GPU의 실행 코드로 변환하므로 소스 언어 처리와 장치별 컴파일을 분리할 수 있습니다. 같은 SPIR-V를 사용해도 장치가 해당 기능을 지원해야 하며, 성능까지 같아지는 것은 아닙니다. [SPIR-V 소개](https://docs.vulkan.org/guide/latest/what_is_spirv.html)
 
 00장에서 설치한 `glslc`가 GLSL을 SPIR-V로 변환합니다. 이 장의 [CMakeLists.txt](CMakeLists.txt)에는 셰이더 빌드 규칙이 준비돼 있습니다. 예제를 빌드하면 `add.comp`의 변경을 확인해 `build/add.comp.spv`를 생성합니다.
 
@@ -107,11 +111,13 @@ void main()
 glslc --target-env=vulkan1.3 --target-spv=spv1.3 add.comp -o build/add.comp.spv
 ```
 
-위 명령을 따로 실행할 필요는 없습니다. 아래의 CMake 빌드가 같은 작업을 수행합니다. Vulkan 대상 환경은 1.3으로, 출력 SPIR-V 버전은 1.3으로 지정합니다. 고정 워크그룹 크기를 사용하는 이 예제에서는 별도의 `maintenance4` 기능 활성화가 필요한 `LocalSizeId`를 피하도록 출력 버전을 지정했습니다.
+CMake 빌드가 위 컴파일 명령을 자동으로 실행합니다.
 
 CMake는 생성한 바이너리의 절대 경로를 `ADD_SHADER_PATH`라는 C++ 컴파일 정의로 전달합니다. 실행 프로그램은 이 경로를 사용하므로 터미널의 작업 디렉터리를 기준으로 셰이더 파일을 찾지 않습니다. 빌드 폴더를 다른 곳으로 옮겼다면 새 경로에서 CMake를 다시 구성하고 빌드합니다.
 
 ## C++에서 셰이더 모듈 만들기
+
+셰이더 모듈은 SPIR-V 코드와 그 안의 진입 함수를 담는 Vulkan 객체입니다. 다음 장에서는 이 모듈에서 실행할 함수를 고르고 리소스 인터페이스를 연결해 파이프라인을 만듭니다. 모듈 자체는 버퍼 연결이나 실행 명령을 포함하지 않습니다. [VkShaderModule](https://docs.vulkan.org/refpages/latest/refpages/source/VkShaderModule.html)
 
 이제 [main.cpp](main.cpp)로 돌아갑니다. 파일 위쪽의 헤더 목록에 파일 입력을 위한 헤더를 추가합니다. `<vector>`와 `<cstdint>`는 앞 장 코드에 이미 있습니다.
 
@@ -184,6 +190,8 @@ if (!file.read(reinterpret_cast<char*>(code.data()), byteCount))
 ```
 
 `read()`는 바이트를 받을 `char*`를 요구하므로 여기서만 포인터를 변환합니다. 저장 공간 자체는 32비트 정수 배열이며, 읽기 실패 시 불완전한 데이터를 Vulkan에 전달하지 않습니다.
+
+eva의 [`SpvBlob::readFrom()`](https://github.com/vaistrata/eva/blob/2a31c83cc83eac7d4b74f4d9c9d4f6f0752c6f99/src/eva-runtime.cpp#L71-L85)도 `uint32_t[]`에 파일을 읽고 바이트 크기를 따로 보관합니다. 여기서도 같은 방식을 쓰되, `std::vector`와 C++ 파일 스트림을 사용하고 열기·크기·읽기 실패 검사를 추가했습니다.
 
 ## SPIR-V를 모듈에 전달하기
 

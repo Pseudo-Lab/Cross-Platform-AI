@@ -1,8 +1,8 @@
-# 02. Validation layers
+# 02. 검증 레이어
 
-[이전: Instance](../01-instance/README.md) · [다음: Physical devices](../03-physical-devices/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 인스턴스 생성과 해제](../01-instance/README.md) · [다음: 물리 디바이스와 큐 패밀리](../03-physical-devices/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-Vulkan API 자체의 오류 검사는 제한적입니다. 개발 중에는 Validation layer를 활성화해 잘못된 인자나 객체 사용 순서에 관한 메시지를 받아 볼 수 있습니다. 레이어가 문제를 검사하고, 우리가 작성할 콜백은 그 메시지를 콘솔에 출력합니다.
+Vulkan API 자체의 오류 검사는 제한적입니다. 개발 중에는 검증 레이어(Validation layer)를 활성화해 잘못된 인자나 객체 사용 순서에 관한 메시지를 받아 볼 수 있습니다. 레이어가 문제를 검사하고, 우리가 작성할 콜백은 그 메시지를 콘솔에 출력합니다.
 
 [main.cpp](main.cpp)는 01장의 인스턴스 생성 코드에서 시작합니다. 레이어를 사용할 수 있는지 확인하는 것부터 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/02-validation-layers.cpp`에서 확인할 수 있습니다.
 
@@ -216,17 +216,17 @@ return true;
 
 ## 인스턴스 생성 후에도 메시지 받기
 
-`pNext`에 연결한 설정은 인스턴스 생성·해제 때 사용됩니다. 인스턴스가 살아 있는 동안의 Vulkan 호출에서도 메시지를 받으려면 Debug messenger 객체를 따로 만들어야 합니다.
+`pNext`에 연결한 설정은 인스턴스 생성·해제 때 사용됩니다. 인스턴스가 살아 있는 동안의 Vulkan 호출에서도 메시지를 받으려면 디버그 메신저(Debug messenger) 객체를 따로 만들어야 합니다.
 
-먼저 기존 `instance` 멤버 바로 아래에 messenger를 보관할 멤버를 추가합니다.
+먼저 기존 `instance` 멤버 바로 아래에 디버그 메신저를 보관할 멤버를 추가합니다.
 
 ```cpp
 vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
 ```
 
-RAII 멤버는 선언의 역순으로 해제됩니다. 따라서 이 위치에 두면 messenger가 먼저 해제되고 인스턴스는 그 뒤에 해제됩니다.
+RAII 멤버는 선언의 역순으로 해제됩니다. 따라서 이 위치에 두면 디버그 메신저가 먼저 해제되고 인스턴스는 그 뒤에 해제됩니다.
 
-이제 `private` 영역에 messenger를 생성할 함수의 틀을 추가합니다.
+이제 `private` 영역에 디버그 메신저를 생성할 함수의 틀을 추가합니다.
 
 ```cpp
 bool setupDebugMessenger()
@@ -234,7 +234,7 @@ bool setupDebugMessenger()
 }
 ```
 
-함수 안에서 앞서 만든 설정을 이용해 messenger를 생성하고 멤버에 저장합니다.
+함수 안에서 앞서 만든 설정을 이용해 디버그 메신저를 생성하고 멤버에 저장합니다.
 
 ```cpp
 debugMessenger = instance.createDebugUtilsMessengerEXT(makeDebugMessengerCreateInfo()); // C API: vkCreateDebugUtilsMessengerEXT
@@ -274,7 +274,7 @@ instance.submitDebugUtilsMessageEXT( // C API: vkSubmitDebugUtilsMessageEXT
     callbackData);
 ```
 
-이 메시지는 Validation layer가 발견한 오류가 아니라 애플리케이션이 직접 보낸 확인용 메시지입니다. 이 장에서만 사용하고, 03장부터는 함수와 호출을 제거합니다.
+이 메시지는 검증 레이어가 발견한 오류가 아니라 애플리케이션이 직접 보낸 확인용 메시지입니다. 이 장에서만 사용하고, 03장부터는 함수와 호출을 제거합니다.
 
 ## 초기화와 실행 순서 연결하기
 
@@ -287,7 +287,7 @@ bool initVulkan()
 }
 ```
 
-`&&`의 왼쪽이 `false`면 오른쪽을 실행하지 않습니다. 레이어나 확장 검사에서 실패하면 messenger 생성 단계로 넘어가지 않습니다.
+`&&`의 왼쪽이 `false`면 오른쪽을 실행하지 않습니다. 레이어나 확장 검사에서 실패하면 디버그 메신저 생성 단계로 넘어가지 않습니다.
 
 초기화가 실패했을 때 확인용 메시지도 보내지 않아야 합니다. `public` 영역에 있는 기존 `run()`의 반환형을 `bool`로 바꾸고, 본문의 `initVulkan();` 호출을 아래 조건으로 교체합니다.
 
@@ -314,9 +314,9 @@ if (!app.run())
 }
 ```
 
-실패는 종료 코드 1로 전달됩니다. 성공하면 안쪽 블록을 빠져나오며 messenger와 인스턴스가 순서대로 해제됩니다. 블록 뒤의 종료 출력은 시작 코드에 준비되어 있습니다.
+실패는 종료 코드 1로 전달됩니다. 성공하면 안쪽 블록을 빠져나오며 디버그 메신저와 인스턴스가 순서대로 해제됩니다. 블록 뒤의 종료 출력은 시작 코드에 준비되어 있습니다.
 
-이제 레이어 지원 확인 → 인스턴스 생성 → messenger 생성 → 확인용 메시지 제출 순서로 실행됩니다. 다음 장부터는 이 설정으로 실제 Vulkan 사용 중 발생하는 메시지를 받으면서 물리적 디바이스를 선택하겠습니다.
+이제 레이어 지원 확인 → 인스턴스 생성 → 디버그 메신저 생성 → 확인용 메시지 제출 순서로 실행됩니다. 다음 장부터는 이 설정으로 실제 Vulkan 사용 중 발생하는 메시지를 받으면서 물리 디바이스를 선택하겠습니다.
 
 ## 빌드와 실행
 
@@ -362,7 +362,7 @@ cmake --build build --target validation_layers_completed
 
 ### 실행 결과
 
-활성화한 레이어 이름과 Debug messenger 생성 여부를 확인합니다. 직접 제출한 메시지가 콜백에 도착했다면 심각도·종류·본문이 함께 출력되어야 합니다.
+활성화한 레이어 이름과 디버그 메신저 생성 여부를 확인합니다. 직접 제출한 메시지가 콜백에 도착했다면 심각도·종류·본문이 함께 출력되어야 합니다.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 

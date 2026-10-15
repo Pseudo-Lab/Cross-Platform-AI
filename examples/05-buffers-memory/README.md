@@ -1,8 +1,8 @@
-# 05. Buffer와 Memory
+# 05. 버퍼와 메모리
 
-[이전: Logical device](../04-logical-device/README.md) · [다음: Descriptor layout](../06-descriptor-layout/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 논리 디바이스와 큐](../04-logical-device/README.md) · [다음: 디스크립터 셋 레이아웃](../06-descriptor-layout/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-논리적 디바이스와 큐를 만들었으니 연산할 데이터를 준비해 보겠습니다. Vulkan에서 버퍼(Buffer)는 데이터를 담는 자원이지만, 버퍼를 만드는 것만으로 저장 공간이 할당되지는 않습니다. 버퍼에 맞는 메모리를 찾아 할당하고 연결해야 합니다.
+논리 디바이스와 큐를 만들었으니 연산할 데이터를 준비해 보겠습니다. Vulkan에서 버퍼(Buffer)는 데이터를 담는 리소스이지만, 버퍼를 만드는 것만으로 저장 공간이 할당되지는 않습니다. 버퍼에 맞는 메모리를 찾아 할당하고 연결해야 합니다.
 
 이번에는 입력 버퍼 두 개와 출력 버퍼 하나를 만들겠습니다. 각 버퍼에 CPU로 값을 기록하고 다시 읽어 확인하는 것까지 진행합니다. GPU에서 이 값을 연산하는 과정은 이후 장에서 이어집니다.
 
@@ -66,7 +66,7 @@ bufferInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer;
 bufferInfo.sharingMode = vk::SharingMode::eExclusive;
 ```
 
-`sharingMode`는 큐 패밀리 사이에서 자원을 공유하는 방식입니다. 이 예제에서는 앞에서 선택한 하나의 패밀리만 사용하므로 `eExclusive`로 둡니다.
+`sharingMode`는 큐 패밀리 사이에서 리소스를 공유하는 방식입니다. 이 예제에서는 앞에서 선택한 하나의 패밀리만 사용하므로 `eExclusive`로 둡니다.
 
 생성 정보를 준비했으니 그 아래에서 버퍼 객체를 만듭니다.
 
@@ -78,13 +78,13 @@ resource.buffer = vk::raii::Buffer(device, bufferInfo); // C API: vkCreateBuffer
 
 ## 버퍼가 요구하는 메모리 확인하기
 
-메모리를 할당하기 전에 드라이버가 요구하는 크기와 메모리 유형을 알아야 합니다. 버퍼 생성 다음 줄에서 요구사항을 가져옵니다.
+메모리를 할당하기 전에 드라이버가 요구하는 크기와 메모리 타입을 알아야 합니다. 버퍼 생성 다음 줄에서 요구사항을 가져옵니다.
 
 ```cpp
 const auto requirements = resource.buffer.getMemoryRequirements(); // C API: vkGetBufferMemoryRequirements
 ```
 
-`requirements.size`는 실제로 할당해야 하는 크기로, 처음 요청한 버퍼 크기보다 클 수 있습니다. `alignment`는 메모리를 연결할 오프셋의 정렬 조건이고, `memoryTypeBits`는 버퍼에 사용할 수 있는 메모리 유형을 비트로 표시한 값입니다.
+`requirements.size`는 실제로 할당해야 하는 크기로, 처음 요청한 버퍼 크기보다 클 수 있습니다. `alignment`는 메모리를 연결할 오프셋의 정렬 조건이고, `memoryTypeBits`는 버퍼에 사용할 수 있는 메모리 타입을 비트로 표시한 값입니다.
 
 버퍼가 허용하는 유형 중에서도 CPU가 직접 값을 기록할 수 있는 메모리를 골라야 합니다. 조회 코드 아래에 필요한 속성을 적습니다.
 
@@ -95,9 +95,9 @@ const auto properties = vk::MemoryPropertyFlagBits::eHostVisible
 
 `eHostVisible`은 메모리를 매핑해 CPU에서 접근할 수 있다는 뜻입니다. `eHostCoherent`는 CPU 접근에 필요한 캐시의 flush와 invalidate를 명시적으로 호출하지 않아도 된다는 뜻입니다. GPU 작업의 완료를 기다려 주는 속성은 아닙니다.
 
-이제 버퍼가 허용하면서 이 두 속성도 갖춘 메모리 유형을 찾아야 합니다. 검색 함수를 먼저 작성한 뒤 여기서 호출하겠습니다.
+이제 버퍼가 허용하면서 이 두 속성도 갖춘 메모리 타입을 찾아야 합니다. 검색 함수를 먼저 작성한 뒤 여기서 호출하겠습니다.
 
-## 사용할 메모리 유형 찾기
+## 사용할 메모리 타입 찾기
 
 잠시 `createBuffer()`에서 나와 그 아래에 다음 함수의 틀을 추가합니다.
 
@@ -110,7 +110,7 @@ bool findMemoryType(std::uint32_t typeFilter, vk::MemoryPropertyFlags properties
 
 `typeFilter`에는 버퍼가 허용하는 유형을, `properties`에는 프로그램이 원하는 속성을 전달합니다. 조건에 맞는 유형을 찾으면 `typeIndex`에 인덱스를 저장하고 `true`를 반환하도록 만들겠습니다.
 
-먼저 함수 안에서 물리적 디바이스의 메모리 유형 정보를 조회합니다.
+먼저 함수 안에서 물리 디바이스의 메모리 타입 정보를 조회합니다.
 
 ```cpp
 const auto memoryProperties = physicalDevice.getMemoryProperties(); // C API: vkGetPhysicalDeviceMemoryProperties
@@ -125,7 +125,7 @@ for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
 }
 ```
 
-반복문 안에서 먼저 이 버퍼가 `i`번 메모리 유형을 허용하는지 확인합니다. 주석을 지우고 다음 줄을 넣습니다.
+반복문 안에서 먼저 이 버퍼가 `i`번 메모리 타입을 허용하는지 확인합니다. 주석을 지우고 다음 줄을 넣습니다.
 
 ```cpp
 const bool allowed = (typeFilter & (1u << i)) != 0;
@@ -338,7 +338,7 @@ return true;
 
 ## 초기화 순서에 연결하기
 
-`createStorageBuffers()`가 완성됐으니 실제 초기화에 연결하겠습니다. 버퍼와 메모리는 논리적 디바이스를 통해 생성하므로, `initVulkan()`의 마지막에 호출을 추가합니다.
+`createStorageBuffers()`가 완성됐으니 실제 초기화에 연결하겠습니다. 버퍼와 메모리는 논리 디바이스를 통해 생성하므로, `initVulkan()`의 마지막에 호출을 추가합니다.
 
 ```cpp
 bool initVulkan()
@@ -351,7 +351,7 @@ bool initVulkan()
 }
 ```
 
-버퍼 멤버를 `device` 뒤에 선언했으므로 버퍼와 메모리가 디바이스보다 먼저 정리됩니다. 다음 장에서는 이 버퍼들을 셰이더에 어떻게 연결할지 정하는 디스크립터 레이아웃을 만들겠습니다.
+버퍼 멤버를 `device` 뒤에 선언했으므로 버퍼와 메모리가 디바이스보다 먼저 정리됩니다. 다음 장에서는 이 버퍼들을 셰이더에 어떻게 연결할지 정하는 디스크립터 셋 레이아웃을 만들겠습니다.
 
 ## 빌드와 실행
 
@@ -397,10 +397,10 @@ cmake --build build --target buffers_memory_completed
 
 ### 실행 결과
 
-입력 버퍼를 다시 읽은 값이 코드에서 준비한 배열과 같은지 확인합니다. 출력 버퍼의 초기값과 버퍼당 바이트 크기도 직접 계산한 값과 비교해 보세요. 메모리 유형과 정렬 크기는 장치에 따라 달라집니다.
+입력 버퍼를 다시 읽은 값이 코드에서 준비한 배열과 같은지 확인합니다. 출력 버퍼의 초기값과 버퍼당 바이트 크기도 직접 계산한 값과 비교해 보세요. 메모리 타입과 정렬 크기는 장치에 따라 달라집니다.
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
 
 ---
 
-이 문서는 [Khronos Vulkan Tutorial: Vertex buffer creation](https://docs.vulkan.org/tutorial/latest/04_Vertex_buffers/01_Vertex_buffer_creation.html)을 컴퓨트용 storage buffer의 할당·매핑 실습에 맞게 번역·각색했습니다. 원문과 이 문서는 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)을 따릅니다.
+이 문서는 [Khronos Vulkan Tutorial: Vertex buffer creation](https://docs.vulkan.org/tutorial/latest/04_Vertex_buffers/01_Vertex_buffer_creation.html)을 컴퓨트용 스토리지 버퍼의 할당·매핑 실습에 맞게 번역·각색했습니다. 원문과 이 문서는 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)을 따릅니다.

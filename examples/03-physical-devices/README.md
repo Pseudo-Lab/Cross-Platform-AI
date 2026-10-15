@@ -1,14 +1,14 @@
-# 03. Physical devices와 Queue families
+# 03. 물리 디바이스와 큐 패밀리
 
-[이전: Validation layers](../02-validation-layers/README.md) · [다음: Logical device](../04-logical-device/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
+[이전: 검증 레이어](../02-validation-layers/README.md) · [다음: 논리 디바이스와 큐](../04-logical-device/README.md) · [전체 튜토리얼](../../README.md#튜토리얼)
 
-인스턴스를 통해 Vulkan 라이브러리를 초기화했다면, 이제 연산에 사용할 물리적 디바이스(Physical device)를 선택할 차례입니다. 컴퓨터에 GPU가 여러 개 있을 수도 있고, 각 장치가 지원하는 기능도 다를 수 있습니다. 이 튜토리얼에서는 Vulkan 1.3을 지원하고 컴퓨트 명령을 처리할 수 있는 첫 번째 장치를 사용하겠습니다.
+인스턴스를 통해 Vulkan 라이브러리를 초기화했다면, 이제 연산에 사용할 물리 디바이스(Physical device)를 선택할 차례입니다. 컴퓨터에 GPU가 여러 개 있을 수도 있고, 각 장치가 지원하는 기능도 다를 수 있습니다. 이 튜토리얼에서는 Vulkan 1.3을 지원하고 컴퓨트 명령을 처리할 수 있는 첫 번째 장치를 사용하겠습니다.
 
 [main.cpp](main.cpp)를 열고, 장치 목록을 가져오는 것부터 하나씩 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/03-physical-devices.cpp`에서 확인할 수 있습니다.
 
 ## 장치 선택 준비하기
 
-02장의 `submitDebugMessage()`는 콜백이 호출되는지 확인하기 위한 함수였습니다. 이 장부터는 사용하지 않습니다. 02장 코드를 직접 이어서 작성하고 있다면 해당 함수와 `run()` 안의 호출을 지워 주세요. Validation layer와 Debug messenger는 그대로 두어 Vulkan 사용 중 발생하는 경고와 오류를 받습니다.
+02장의 `submitDebugMessage()`는 콜백이 호출되는지 확인하기 위한 함수였습니다. 이 장부터는 사용하지 않습니다. 02장 코드를 직접 이어서 작성하고 있다면 해당 함수와 `run()` 안의 호출을 지워 주세요. 검증 레이어와 디버그 메신저는 그대로 두어 Vulkan 사용 중 발생하는 경고와 오류를 받습니다.
 
 선택한 장치는 함수가 끝난 뒤에도 사용할 수 있어야 합니다. `private` 영역의 `debugMessenger` 바로 아래에 장치와 큐 패밀리 인덱스를 보관할 멤버를 추가합니다.
 
@@ -27,7 +27,7 @@ std::uint32_t computeQueueFamilyIndex = 0;
 #include <utility>
 ```
 
-## 물리적 디바이스 목록 가져오기
+## 물리 디바이스 목록 가져오기
 
 먼저 `private` 영역에 장치를 선택할 함수의 틀을 만듭니다. 이 함수는 장치를 선택하면 `true`, 선택하지 못하면 `false`를 반환하도록 작성하겠습니다.
 
@@ -37,7 +37,7 @@ bool pickPhysicalDevice()
 }
 ```
 
-함수 안에서 `enumeratePhysicalDevices()`를 호출하면 이 인스턴스로 접근할 수 있는 물리적 디바이스 목록을 가져올 수 있습니다.
+함수 안에서 `enumeratePhysicalDevices()`를 호출하면 이 인스턴스로 접근할 수 있는 물리 디바이스 목록을 가져올 수 있습니다.
 
 ```cpp
 auto physicalDevices = instance.enumeratePhysicalDevices(); // C API: vkEnumeratePhysicalDevices
@@ -91,7 +91,7 @@ if (properties.apiVersion < VK_API_VERSION_1_3)
 
 ## 컴퓨트 큐 패밀리 찾기
 
-Vulkan에서는 GPU가 처리할 명령을 큐(Queue)에 제출합니다. 큐 패밀리(Queue family)는 같은 종류의 명령을 지원하는 큐의 집합입니다. 어떤 패밀리는 그래픽과 컴퓨트 명령을 모두 지원하고, 어떤 패밀리는 전송 작업을 담당할 수 있습니다. 우리는 이 중 컴퓨트 명령을 처리할 수 있는 패밀리를 찾겠습니다.
+Vulkan에서는 GPU가 처리할 명령을 큐(Queue)에 제출합니다. 큐 패밀리(Queue family)는 같은 종류의 명령을 지원하는 큐의 집합입니다. 어떤 패밀리는 그래픽스와 컴퓨트 명령을 모두 지원하고, 어떤 패밀리는 전송 작업을 담당할 수 있습니다. 우리는 이 중 컴퓨트 명령을 처리할 수 있는 패밀리를 찾겠습니다.
 
 잠시 `pickPhysicalDevice()`에서 나와, 같은 `private` 영역에 큐 패밀리를 검색할 함수를 추가합니다. 이 함수는 검사할 장치를 받아 사용할 패밀리의 인덱스를 돌려줍니다. 검색 결과가 없을 수도 있으므로 반환형은 값의 유무를 함께 표현하는 `std::optional`로 둡니다.
 
@@ -201,9 +201,9 @@ const auto features = physicalDevice.getFeatures(); // C API: vkGetPhysicalDevic
 std::cout << "shaderFloat64 supported (not enabled): " << (features.shaderFloat64 ? "yes" : "no") << '\n';
 ```
 
-여기서는 지원 여부만 조회합니다. 이 기능을 실제로 사용하려면 다음 장에서 논리적 디바이스를 만들 때 활성화를 요청해야 합니다.
+여기서는 지원 여부만 조회합니다. 이 기능을 실제로 사용하려면 다음 장에서 논리 디바이스를 만들 때 활성화를 요청해야 합니다.
 
-마지막으로 연산에 사용할 수 있는 크기의 한계를 살펴보겠습니다. 컴퓨트 셰이더의 실행 단위들은 작업 그룹(Workgroup)으로 묶이며, 그룹 수와 그룹 안의 크기는 각각 x, y, z 세 축으로 정합니다. 장치의 `limits`에는 각 축에 허용되는 최대 크기가 들어 있습니다.
+마지막으로 연산에 사용할 수 있는 크기의 한계를 살펴보겠습니다. 컴퓨트 셰이더의 실행 단위들은 워크그룹(Workgroup)으로 묶이며, 그룹 수와 그룹 안의 크기는 각각 x, y, z 세 축으로 정합니다. 장치의 `limits`에는 각 축에 허용되는 최대 크기가 들어 있습니다.
 
 ```cpp
 const auto& limits = properties.limits;
@@ -213,7 +213,7 @@ std::cout << "maxComputeWorkGroupCount: " << limits.maxComputeWorkGroupCount[0] 
           << limits.maxComputeWorkGroupSize[1] << ", " << limits.maxComputeWorkGroupSize[2] << '\n';
 ```
 
-`maxComputeWorkGroupCount`는 한 번의 dispatch에서 제출할 수 있는 각 축의 그룹 수 한계입니다. `maxComputeWorkGroupSize`는 그룹 하나 안에서 각 축에 배치할 수 있는 실행 단위 수의 한계입니다.
+`maxComputeWorkGroupCount`는 한 번의 디스패치에서 제출할 수 있는 각 축의 그룹 수 한계입니다. `maxComputeWorkGroupSize`는 그룹 하나 안에서 각 축에 배치할 수 있는 실행 단위 수의 한계입니다.
 
 각 축의 크기를 만족하더라도 그룹 하나의 총 실행 단위 수에는 별도의 제한이 있습니다. 이를 나타내는 `maxComputeWorkGroupInvocations`와, 스토리지 버퍼 디스크립터로 지정할 수 있는 최대 바이트 범위인 `maxStorageBufferRange`도 이어서 출력합니다.
 
@@ -235,7 +235,7 @@ return true;
 
 ## 초기화 순서에 연결하기
 
-이제 작성한 장치 선택 함수를 실제 초기화 흐름에 연결하겠습니다. 기존 `initVulkan()`을 다음과 같이 바꾸면 인스턴스와 Debug messenger를 만든 뒤 장치를 선택합니다.
+이제 작성한 장치 선택 함수를 실제 초기화 흐름에 연결하겠습니다. 기존 `initVulkan()`을 다음과 같이 바꾸면 인스턴스와 디버그 메신저를 만든 뒤 장치를 선택합니다.
 
 ```cpp
 bool initVulkan()
@@ -246,7 +246,7 @@ bool initVulkan()
 
 앞 단계가 실패하면 `&&` 뒤의 함수는 실행되지 않습니다. 장치 선택까지 성공하면 `true`가 반환되고, 선택한 장치는 멤버에 남아 다음 단계에서 사용할 수 있습니다.
 
-여기까지 작성하면 사용할 물리적 디바이스와 큐 패밀리를 선택한 것입니다. 다음 장에서는 이 정보로 논리적 디바이스를 만들고 실제 큐 핸들을 가져오겠습니다.
+여기까지 작성하면 사용할 물리 디바이스와 큐 패밀리를 선택한 것입니다. 다음 장에서는 이 정보로 논리 디바이스를 만들고 실제 큐 핸들을 가져오겠습니다.
 
 ## 빌드와 실행
 

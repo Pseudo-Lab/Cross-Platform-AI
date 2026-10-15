@@ -6,24 +6,26 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 
 ## 튜토리얼
 
+[질문과 답변](QUESTIONS.md)
+
 예제는 Vulkan-Hpp의 `vk::raii`를 사용합니다. C API 함수와 1:1로 대응하는 호출에만 함수명을 주석으로 표기합니다.
 01장부터는 각 장의 `main.cpp`를 열고 README의 코드 블록을 따라 채워 나갑니다. 완성본은 `examples/99-completed/`에 모아 별도로 공개합니다.
 각 예제는 해당 폴더에서 CMake로 독립적으로 빌드합니다. 빌드 명령은 각 장의 문서를 따릅니다.
 
 1. [00. 환경 설정](examples/00-env-settings/README.md) · [English](examples/00-env-settings/README-en.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
-2. [01. Instance 생성과 해제](examples/01-instance/README.md) — API 버전, instance extension 조회, RAII로 생성·해제
-3. [02. Validation layers](examples/02-validation-layers/README.md) — 검증 레이어 활성화, debug messenger와 진단 메시지
-4. [03. Physical devices와 queue families](examples/03-physical-devices/README.md) — 장치 기능·한계 조회, GPU와 compute 큐 패밀리 선택
-5. [04. Logical device와 queues](examples/04-logical-device/README.md) — 논리 장치 생성, 사용할 기능 지정, compute queue 준비
-6. [05. Buffer와 memory](examples/05-buffers-memory/README.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
-7. [06. Descriptor set layout](examples/06-descriptor-layout/README.md) — 바인딩별 리소스 종류·개수·셰이더 단계, 레이아웃 생성
-8. [07. Descriptor pool과 sets](examples/07-descriptor-sets/README.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
-9. [08. Compute shader](examples/08-compute-shader/README.md) — 벡터 덧셈 GLSL, workgroup과 범위 검사, SPIR-V 로드와 shader module
-10. [09. Compute pipeline](examples/09-compute-pipeline/README.md) — pipeline layout, push constant 범위, compute pipeline 생성
-11. [10. Command buffers](examples/10-command-buffers/README.md) — 명령 버퍼 할당, pipeline·descriptor·push constant 바인딩, dispatch 기록
-12. [11. Dispatch와 동기화](examples/11-dispatch-synchronization/README.md) — 큐 제출, barrier와 fence, CPU 정답 검증, 입력을 바꿔 재실행
-13. [12. Staging buffers](examples/12-staging-buffers/README.md) — 전송용·연산용 버퍼 분리, 복사와 transfer ↔ compute 동기화
-14. [13. Multiple dispatches](examples/13-multiple-dispatches/README.md) — 중간 버퍼와 두 descriptor set, compute → compute 동기화, 연속 연산 검증
+2. [01. 인스턴스 생성과 해제](examples/01-instance/README.md) — API 버전, 인스턴스 확장 조회, RAII로 생성·해제
+3. [02. 검증 레이어](examples/02-validation-layers/README.md) — 검증 레이어 활성화, 디버그 메신저와 진단 메시지
+4. [03. 물리 디바이스와 큐 패밀리](examples/03-physical-devices/README.md) — 장치 기능·한계 조회, GPU와 컴퓨트 큐 패밀리 선택
+5. [04. 논리 디바이스와 큐](examples/04-logical-device/README.md) — 논리 디바이스 생성, 사용할 기능 지정, 컴퓨트 큐 준비
+6. [05. 버퍼와 메모리](examples/05-buffers-memory/README.md) — 메모리 타입 선택, 할당·바인딩·매핑, CPU 데이터 기록
+7. [06. 디스크립터 셋 레이아웃](examples/06-descriptor-layout/README.md) — 바인딩별 리소스 종류·개수·셰이더 단계, 레이아웃 생성
+8. [07. 디스크립터 풀과 셋](examples/07-descriptor-sets/README.md) — 풀 생성, 셋 할당·갱신, 입력·출력 버퍼 연결
+9. [08. 컴퓨트 셰이더](examples/08-compute-shader/README.md) — 벡터 덧셈 GLSL, 워크그룹과 범위 검사, SPIR-V 로드와 셰이더 모듈
+10. [09. 컴퓨트 파이프라인](examples/09-compute-pipeline/README.md) — 파이프라인 레이아웃, 푸시 상수 범위, 컴퓨트 파이프라인 생성
+11. [10. 커맨드 버퍼](examples/10-command-buffers/README.md) — 커맨드 버퍼 할당, 파이프라인·디스크립터·푸시 상수 바인딩, 디스패치 기록
+12. [11. 디스패치와 동기화](examples/11-dispatch-synchronization/README.md) — 큐 제출, 배리어와 펜스, CPU 정답 검증, 입력을 바꿔 재실행
+13. [12. 스테이징 버퍼](examples/12-staging-buffers/README.md) — 전송용·연산용 버퍼 분리, 복사와 전송 ↔ 컴퓨트 동기화
+14. [13. 연속 디스패치](examples/13-multiple-dispatches/README.md) — 중간 버퍼와 두 디스크립터 셋, 컴퓨트 → 컴퓨트 동기화, 연속 연산 검증
 
 11장까지는 첫 GPU 벡터 덧셈을 완성합니다. 12장은 데이터 전송을 분리하고, 13장은 GPU에 남아 있는 중간 결과를 다음 연산으로 연결합니다.
 
@@ -31,7 +33,7 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 
 ### Vulkan 컴퓨트 기초
 
-Device와 Queue, Buffer와 Memory, descriptor를 이용한 리소스 연결부터 시작합니다. GLSL 셰이더를 SPIR-V로 컴파일하고 compute pipeline과 command buffer로 실행하는 최소 예제를 통해 데이터 전달, dispatch, 동기화, 결과 확인 과정을 설명합니다.
+디바이스와 큐, 버퍼와 메모리, 디스크립터를 이용한 리소스 연결부터 시작합니다. GLSL 셰이더를 SPIR-V로 컴파일하고 컴퓨트 파이프라인과 커맨드 버퍼로 실행하는 최소 예제를 통해 데이터 전달, 디스패치, 동기화, 결과 확인 과정을 설명합니다.
 
 ### llama.cpp Vulkan 백엔드 분석
 

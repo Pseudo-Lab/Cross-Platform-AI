@@ -4,7 +4,7 @@
 
 11장에서는 CPU가 매핑한 스토리지 버퍼를 컴퓨트 셰이더도 사용했습니다. 이번에는 CPU가 데이터를 주고받는 버퍼와 GPU가 연산하는 버퍼를 나누겠습니다. 셰이더의 `A + B` 연산은 그대로 두고, 입력 업로드와 결과 다운로드를 커맨드 버퍼에 추가합니다.
 
-[main.cpp](main.cpp)의 TODO를 따라 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/12-staging-buffers.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)에 아래 순서대로 코드를 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/12-staging-buffers.cpp`에서 확인할 수 있습니다.
 
 ## 전송용 버퍼와 연산용 버퍼 나누기
 
@@ -31,6 +31,11 @@ CPU → uploadB ──copy──→ inputB ─┘
 
 복사 비용보다 이후 GPU 접근에서 아끼는 비용이 커야 스테이징의 이득이 있습니다. 이 예제처럼 작은 배열을 한 번 더하거나 CPU와 GPU가 메모리를 공유하는 UMA 장치에서는 직접 접근이 더 적합할 수 있으므로, 장치·입력 크기·데이터 재사용 횟수에 따라 측정해야 합니다. [Khronos의 스테이징과 UMA 설명](https://docs.vulkan.org/guide/latest/synchronization_examples.html#_upload_data_from_the_cpu_to_a_vertex_buffer)
 
+> [!NOTE]
+> **생각해볼 점**
+>
+> CPU에서 접근 가능한 메모리를 GPU가 직접 읽는 방식과, 스테이징 버퍼에서 장치 메모리로 복사한 뒤 읽는 방식 중 어느 쪽이 유리할까요? 데이터를 한 번만 읽는 경우와 여러 번 재사용하는 경우, 내장 GPU와 외장 GPU를 나누어 비교해 보세요.
+
 ## 전송과 연산 사이의 의존성
 
 11장의 `COMPUTE_SHADER / SHADER_WRITE → HOST / HOST_READ` 의존성은 GPU 출력 버퍼를 CPU가 직접 읽기 위한 것이었습니다. 이제 CPU가 읽는 버퍼가 달라졌으므로 다음 세 의존성이 필요합니다.
@@ -47,7 +52,7 @@ CPU → uploadB ──copy──→ inputB ─┘
 
 ## 버퍼 생성 함수에 용도와 메모리 속성 전달하기
 
-`output` 멤버 바로 아래의 TODO에 전송용 버퍼를 추가합니다.
+`output` 멤버 바로 아래에 전송용 버퍼를 추가합니다.
 
 ```cpp
 BufferResource uploadA;
@@ -121,7 +126,7 @@ CPU 쓰기는 `submitAndWait()` 호출 전에 끝나고, 전송용 메모리는 
 
 ## 입력 복사 기록하기
 
-`recordCommandBuffer()`에서 `cmd.begin(beginInfo)` 다음 TODO 위치에 복사 범위와 명령을 추가합니다.
+`recordCommandBuffer()`에서 `cmd.begin(beginInfo)` 다음에 복사 범위와 명령을 추가합니다.
 
 ```cpp
 vk::BufferCopy copyRegion{};
@@ -232,7 +237,7 @@ cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
 ```cpp
 std::array<float, elementCount> results{};
 void* mapped = readback.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-std::memcpy(results.data(), mapped, static_cast<std::size_t>(bufferSize));
+std::memcpy(results.data(), mapped, static_cast<size_t>(bufferSize));
 readback.memory.unmapMemory(); // C API: vkUnmapMemory
 ```
 

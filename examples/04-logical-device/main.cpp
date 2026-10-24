@@ -1,6 +1,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
-#include <cstdint>
+#include <stdint.h>
 #include <cstring>
 #include <iostream>
 #include <optional>
@@ -25,12 +25,10 @@ private:
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice physicalDevice = nullptr;
-    std::uint32_t computeQueueFamilyIndex = 0;
-    // TODO: device와 computeQueue 멤버를 추가합니다.
+    uint32_t computeQueueFamilyIndex = 0;
 
     bool initVulkan()
     {
-        // TODO: 마지막에 createLogicalDevice() 호출을 연결합니다.
         return createInstance() && setupDebugMessenger() && pickPhysicalDevice();
     }
 
@@ -153,11 +151,11 @@ private:
         return false;
     }
 
-    static std::optional<std::uint32_t> findComputeQueueFamily(
+    static std::optional<uint32_t> findComputeQueueFamily(
         const vk::raii::PhysicalDevice& candidate)
     {
         const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
+        for (uint32_t index = 0; index < queueFamilies.size(); ++index)
         {
             const auto& family = queueFamilies[index];
             if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
@@ -167,8 +165,6 @@ private:
         }
         return std::nullopt;
     }
-
-    // TODO: createLogicalDevice()를 추가합니다.
 };
 
 int main()

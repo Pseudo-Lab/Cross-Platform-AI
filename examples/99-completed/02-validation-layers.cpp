@@ -129,7 +129,6 @@ private:
                   << ": " << callbackData->pMessage << '\n';
         return VK_FALSE;
     }
-
 };
 
 int main()

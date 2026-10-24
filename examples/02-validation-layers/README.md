@@ -137,7 +137,7 @@ return createInfo;
 
 ## 인스턴스 생성 전에 지원 여부 검사하기
 
-레이어 검사 함수가 준비됐으니 기존 `createInstance()`에서 사용하겠습니다. 지원하지 않을 때 실패를 돌려줄 수 있도록 반환형을 `void`에서 `bool`로 바꿉니다. 기존 본문은 남겨 두고, 맨 앞의 레이어 검사 TODO 자리에 다음 코드를 넣습니다.
+레이어 검사 함수가 준비됐으니 기존 `createInstance()`에서 사용하겠습니다. 지원하지 않을 때 실패를 돌려줄 수 있도록 반환형을 `void`에서 `bool`로 바꿉니다. 기존 본문은 남겨 두고, 함수 맨 앞에 다음 코드를 넣습니다.
 
 ```cpp
 if (!checkValidationLayerSupport())
@@ -154,7 +154,7 @@ if (!checkValidationLayerSupport())
 bool debugUtilsAvailable = false;
 ```
 
-기존 `for (const auto& extension : extensions)` 안의 TODO를 아래 검사로 바꿉니다.
+기존 `for (const auto& extension : extensions)` 안에 아래 검사를 추가합니다.
 
 ```cpp
 if (std::strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)

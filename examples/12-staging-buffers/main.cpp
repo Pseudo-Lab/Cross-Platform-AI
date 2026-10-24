@@ -1,8 +1,8 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <array>
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 #include <cstring>
 #include <iostream>
 #include <cmath>
@@ -21,7 +21,7 @@ public:
         {
             return false;
         }
-        for (std::uint32_t round = 0; round < 2; ++round)
+        for (uint32_t round = 0; round < 2; ++round)
         {
             if (round != 0)
             {
@@ -39,8 +39,8 @@ private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
 
     static_assert(sizeof(float) == 4);
-    static constexpr std::uint32_t elementCount = 8;
-    static constexpr std::uint32_t workgroupSize = 64;
+    static constexpr uint32_t elementCount = 8;
+    static constexpr uint32_t workgroupSize = 64;
     static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
 
     struct BufferResource
@@ -53,13 +53,12 @@ private:
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice physicalDevice = nullptr;
-    std::uint32_t computeQueueFamilyIndex = 0;
+    uint32_t computeQueueFamilyIndex = 0;
     vk::raii::Device device = nullptr;
     vk::raii::Queue computeQueue = nullptr;
     BufferResource inputA;
     BufferResource inputB;
     BufferResource output;
-    // TODO: uploadA, uploadB, readback 멤버를 추가합니다.
     vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
     vk::raii::DescriptorPool descriptorPool = nullptr;
     std::vector<vk::raii::DescriptorSet> descriptorSets;
@@ -207,11 +206,11 @@ private:
         return false;
     }
 
-    static std::optional<std::uint32_t> findComputeQueueFamily(
+    static std::optional<uint32_t> findComputeQueueFamily(
         const vk::raii::PhysicalDevice& candidate)
     {
         const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
+        for (uint32_t index = 0; index < queueFamilies.size(); ++index)
         {
             const auto& family = queueFamilies[index];
             if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
@@ -221,7 +220,6 @@ private:
         }
         return std::nullopt;
     }
-
 
     bool createLogicalDevice()
     {
@@ -242,7 +240,6 @@ private:
         return true;
     }
 
-    // TODO: 역할별 usage와 memory properties로 버퍼를 생성합니다.
     bool createStorageBuffers()
     {
         const std::array buffers = {&inputA, &inputB, &output};
@@ -256,7 +253,6 @@ private:
         return true;
     }
 
-    // TODO: usage, properties 인자를 추가하고 findMemoryType() 실패 메시지를 수정합니다.
     bool createBuffer(vk::DeviceSize size, BufferResource& resource)
     {
         vk::BufferCreateInfo bufferInfo{};
@@ -268,7 +264,7 @@ private:
         const auto requirements = resource.buffer.getMemoryRequirements(); // C API: vkGetBufferMemoryRequirements
         const auto properties = vk::MemoryPropertyFlagBits::eHostVisible
             | vk::MemoryPropertyFlagBits::eHostCoherent;
-        std::uint32_t memoryTypeIndex = 0;
+        uint32_t memoryTypeIndex = 0;
         if (!findMemoryType(requirements.memoryTypeBits, properties, memoryTypeIndex))
         {
             return false;
@@ -283,11 +279,11 @@ private:
         return true;
     }
 
-    bool findMemoryType(std::uint32_t typeFilter, vk::MemoryPropertyFlags properties,
-                        std::uint32_t& typeIndex)
+    bool findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties,
+                        uint32_t& typeIndex)
     {
         const auto memoryProperties = physicalDevice.getMemoryProperties(); // C API: vkGetPhysicalDeviceMemoryProperties
-        for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
         {
             const bool allowed = (typeFilter & (1u << i)) != 0;
             const bool hasProperties =
@@ -306,14 +302,15 @@ private:
     bool writeBuffer(BufferResource& resource, const std::array<float, elementCount>& values)
     {
         void* mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(mapped, values.data(), static_cast<std::size_t>(bufferSize));
+        std::memcpy(mapped, values.data(), static_cast<size_t>(bufferSize));
         resource.memory.unmapMemory(); // C API: vkUnmapMemory
         return true;
     }
+
     bool createDescriptorSetLayout()
     {
         std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
-        for (std::uint32_t i = 0; i < bindings.size(); ++i)
+        for (uint32_t i = 0; i < bindings.size(); ++i)
         {
             bindings[i].binding = i;
             bindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -322,11 +319,12 @@ private:
         }
 
         vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
         layoutInfo.pBindings = bindings.data();
         descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout
         return true;
     }
+
     bool createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{};
@@ -360,7 +358,7 @@ private:
             bufferInfo.range = bufferSize;
         }
         std::array<vk::WriteDescriptorSet, 3> writes{};
-        for (std::uint32_t i = 0; i < writes.size(); ++i)
+        for (uint32_t i = 0; i < writes.size(); ++i)
         {
             writes[i].dstSet = *descriptorSets[0];
             writes[i].dstBinding = i;
@@ -371,6 +369,7 @@ private:
         device.updateDescriptorSets(writes, {}); // C API: vkUpdateDescriptorSets
         return true;
     }
+
     bool createShaderModule()
     {
         std::ifstream file(ADD_SHADER_PATH, std::ios::ate | std::ios::binary);
@@ -380,12 +379,12 @@ private:
             return false;
         }
         const std::streamsize byteCount = file.tellg();
-        if (byteCount <= 0 || byteCount % sizeof(std::uint32_t) != 0)
+        if (byteCount <= 0 || byteCount % sizeof(uint32_t) != 0)
         {
             std::cerr << "Invalid SPIR-V byte count.\n";
             return false;
         }
-        std::vector<std::uint32_t> code(static_cast<std::size_t>(byteCount) / sizeof(std::uint32_t));
+        std::vector<uint32_t> code(static_cast<size_t>(byteCount) / sizeof(uint32_t));
         file.seekg(0);
         if (!file.read(reinterpret_cast<char*>(code.data()), byteCount))
         {
@@ -394,18 +393,19 @@ private:
         }
 
         vk::ShaderModuleCreateInfo moduleInfo{};
-        moduleInfo.codeSize = static_cast<std::size_t>(byteCount);
+        moduleInfo.codeSize = static_cast<size_t>(byteCount);
         moduleInfo.pCode = code.data();
         shaderModule = vk::raii::ShaderModule(device, moduleInfo); // C API: vkCreateShaderModule
         std::cout << "Shader module created: " << moduleInfo.codeSize << " bytes.\n";
         return true;
     }
+
     bool createPipelineLayout()
     {
         vk::PushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eCompute;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(std::uint32_t);
+        pushConstantRange.size = sizeof(uint32_t);
 
         const vk::DescriptorSetLayout layout = *descriptorSetLayout;
         vk::PipelineLayoutCreateInfo layoutInfo{};
@@ -431,6 +431,7 @@ private:
         std::cout << "Compute pipeline created.\n";
         return true;
     }
+
     bool createCommandPool()
     {
         vk::CommandPoolCreateInfo poolInfo{};
@@ -451,7 +452,7 @@ private:
 
     bool recordCommandBuffer()
     {
-        const std::uint32_t groupCount = (elementCount + workgroupSize - 1) / workgroupSize;
+        const uint32_t groupCount = (elementCount + workgroupSize - 1) / workgroupSize;
         const auto limits = physicalDevice.getProperties().limits; // C API: vkGetPhysicalDeviceProperties
         if (groupCount > limits.maxComputeWorkGroupCount[0])
         {
@@ -462,16 +463,14 @@ private:
         auto& cmd = commandBuffers[0];
         vk::CommandBufferBeginInfo beginInfo{};
         cmd.begin(beginInfo); // C API: vkBeginCommandBuffer
-        // TODO: 입력 복사와 transfer write → compute read 배리어를 기록합니다.
         cmd.bindPipeline(vk::PipelineBindPoint::eCompute, *computePipeline); // C API: vkCmdBindPipeline
         cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, *pipelineLayout,
                                0, *descriptorSets[0], {}); // C API: vkCmdBindDescriptorSets
-        const std::uint32_t count = elementCount;
-        cmd.pushConstants<std::uint32_t>(*pipelineLayout, vk::ShaderStageFlagBits::eCompute,
+        const uint32_t count = elementCount;
+        cmd.pushConstants<uint32_t>(*pipelineLayout, vk::ShaderStageFlagBits::eCompute,
                                         0, count); // C API: vkCmdPushConstants
         cmd.dispatch(groupCount, 1, 1); // C API: vkCmdDispatch
 
-        // TODO: 이 배리어를 출력 복사와 두 단계 배리어로 교체합니다.
         vk::BufferMemoryBarrier hostBarrier{};
         hostBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
         hostBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
@@ -486,20 +485,20 @@ private:
         std::cout << "Command buffer recorded: " << groupCount << " workgroups.\n";
         return true;
     }
+
     bool createFence()
     {
         fence = vk::raii::Fence(device, vk::FenceCreateInfo{}); // C API: vkCreateFence
         return true;
     }
 
-    // TODO: CPU 쓰기 대상을 uploadA, uploadB, readback으로 바꿉니다.
-    bool writeInputs(std::uint32_t round)
+    bool writeInputs(uint32_t round)
     {
         std::array<float, elementCount> valuesA{};
         std::array<float, elementCount> valuesB{};
         std::array<float, elementCount> initialOutput{};
         initialOutput.fill(std::numeric_limits<float>::quiet_NaN());
-        for (std::uint32_t i = 0; i < elementCount; ++i)
+        for (uint32_t i = 0; i < elementCount; ++i)
         {
             valuesA[i] = static_cast<float>(i + round);
             valuesB[i] = 10.0f + static_cast<float>(i + round);
@@ -526,14 +525,13 @@ private:
         return true;
     }
 
-    // TODO: output 대신 readback 메모리를 읽습니다.
-    bool verifyOutput(std::uint32_t round)
+    bool verifyOutput(uint32_t round)
     {
         std::array<float, elementCount> results{};
         void* mapped = output.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(results.data(), mapped, static_cast<std::size_t>(bufferSize));
+        std::memcpy(results.data(), mapped, static_cast<size_t>(bufferSize));
         output.memory.unmapMemory(); // C API: vkUnmapMemory
-        for (std::uint32_t i = 0; i < elementCount; ++i)
+        for (uint32_t i = 0; i < elementCount; ++i)
         {
             const float a = static_cast<float>(i + round);
             const float b = 10.0f + static_cast<float>(i + round);

@@ -4,11 +4,11 @@
 
 이전 장에서는 사용할 물리 디바이스와 컴퓨트 큐 패밀리를 선택했습니다. 이제 그 장치에 작업을 요청할 논리 디바이스(Logical device)를 만들 차례입니다. 이때 사용할 기능과 큐 개수를 지정하고, 생성된 큐의 핸들을 가져오겠습니다.
 
-[main.cpp](main.cpp)를 열고 TODO 위치를 따라 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/04-logical-device.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)를 열고 아래 순서대로 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/04-logical-device.cpp`에서 확인할 수 있습니다.
 
 ## 디바이스와 큐를 보관할 자리 만들기
 
-논리 디바이스와 큐는 초기화가 끝난 뒤에도 사용합니다. `private` 영역의 `computeQueueFamilyIndex` 아래 TODO를 다음 멤버로 바꿉니다.
+논리 디바이스와 큐는 초기화가 끝난 뒤에도 사용합니다. `private` 영역의 `computeQueueFamilyIndex` 아래에 다음 멤버를 추가합니다.
 
 ```cpp
 vk::raii::Device device = nullptr;
@@ -17,7 +17,7 @@ vk::raii::Queue computeQueue = nullptr;
 
 `device`는 논리 디바이스를, `computeQueue`는 명령을 제출할 큐를 보관합니다. 아직 생성하지 않았으므로 두 객체 모두 `nullptr`로 초기화합니다.
 
-이제 클래스 끝의 TODO 위치에 생성 함수의 틀을 추가합니다. 함수 안에서 큐 생성 정보부터 준비하겠습니다.
+이제 클래스의 `private` 영역 끝에 생성 함수의 틀을 추가합니다. 함수 안에서 큐 생성 정보부터 준비하겠습니다.
 
 ```cpp
 bool createLogicalDevice()
@@ -89,7 +89,7 @@ device = vk::raii::Device(physicalDevice, createInfo); // C API: vkCreateDevice
 이때 `queueCreateInfo`로 요청했던 큐도 함께 생성됩니다. 다만 프로그램에서 사용할 큐 핸들은 아직 가져오지 않았습니다. 다음 줄에서 그 핸들을 `computeQueue`에 저장합니다.
 
 ```cpp
-const std::uint32_t queueIndex = 0;
+const uint32_t queueIndex = 0;
 computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, queueIndex); // C API: vkGetDeviceQueue
 ```
 
@@ -103,6 +103,11 @@ std::cout << "Logical device created.\n"
           << ", queue " << queueIndex << ".\n";
 return true;
 ```
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> 같은 큐에 두 작업을 순서대로 제출하면 앞 작업이 완전히 끝난 뒤 다음 작업이 시작할까요? CUDA의 스트림과 Vulkan의 큐에서 작업 실행 순서와 동기화 방식이 어떻게 다른지 비교해 보세요.
 
 ## 초기화 순서에 연결하기
 

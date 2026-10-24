@@ -1,14 +1,13 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <array>
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 #include <cstring>
 #include <iostream>
 #include <optional>
 #include <utility>
 #include <vector>
-// TODO: <fstream> 헤더를 추가합니다.
 
 class ComputeApplication
 {
@@ -26,7 +25,7 @@ private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
 
     static_assert(sizeof(float) == 4);
-    static constexpr std::uint32_t elementCount = 8;
+    static constexpr uint32_t elementCount = 8;
     static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
 
     struct BufferResource
@@ -39,7 +38,7 @@ private:
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice physicalDevice = nullptr;
-    std::uint32_t computeQueueFamilyIndex = 0;
+    uint32_t computeQueueFamilyIndex = 0;
     vk::raii::Device device = nullptr;
     vk::raii::Queue computeQueue = nullptr;
     BufferResource inputA;
@@ -48,7 +47,6 @@ private:
     vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
     vk::raii::DescriptorPool descriptorPool = nullptr;
     std::vector<vk::raii::DescriptorSet> descriptorSets;
-    // TODO: shaderModule 멤버를 추가합니다.
 
     bool initVulkan()
     {
@@ -59,7 +57,7 @@ private:
             && createStorageBuffers()
             && createDescriptorSetLayout()
             && createDescriptorPool()
-            && createDescriptorSets(); // TODO: createShaderModule() 호출을 이어 붙입니다.
+            && createDescriptorSets();
     }
 
     bool checkValidationLayerSupport()
@@ -181,11 +179,11 @@ private:
         return false;
     }
 
-    static std::optional<std::uint32_t> findComputeQueueFamily(
+    static std::optional<uint32_t> findComputeQueueFamily(
         const vk::raii::PhysicalDevice& candidate)
     {
         const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
+        for (uint32_t index = 0; index < queueFamilies.size(); ++index)
         {
             const auto& family = queueFamilies[index];
             if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
@@ -195,7 +193,6 @@ private:
         }
         return std::nullopt;
     }
-
 
     bool createLogicalDevice()
     {
@@ -230,7 +227,7 @@ private:
         std::array<float, elementCount> valuesA{};
         std::array<float, elementCount> valuesB{};
         const std::array<float, elementCount> initialOutput{};
-        for (std::uint32_t i = 0; i < elementCount; ++i)
+        for (uint32_t i = 0; i < elementCount; ++i)
         {
             valuesA[i] = static_cast<float>(i);
             valuesB[i] = 10.0f + static_cast<float>(i);
@@ -257,7 +254,7 @@ private:
         const auto requirements = resource.buffer.getMemoryRequirements(); // C API: vkGetBufferMemoryRequirements
         const auto properties = vk::MemoryPropertyFlagBits::eHostVisible
             | vk::MemoryPropertyFlagBits::eHostCoherent;
-        std::uint32_t memoryTypeIndex = 0;
+        uint32_t memoryTypeIndex = 0;
         if (!findMemoryType(requirements.memoryTypeBits, properties, memoryTypeIndex))
         {
             return false;
@@ -272,11 +269,11 @@ private:
         return true;
     }
 
-    bool findMemoryType(std::uint32_t typeFilter, vk::MemoryPropertyFlags properties,
-                        std::uint32_t& typeIndex)
+    bool findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties,
+                        uint32_t& typeIndex)
     {
         const auto memoryProperties = physicalDevice.getMemoryProperties(); // C API: vkGetPhysicalDeviceMemoryProperties
-        for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
         {
             const bool allowed = (typeFilter & (1u << i)) != 0;
             const bool hasProperties =
@@ -297,12 +294,12 @@ private:
                               const char* label)
     {
         void* mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(mapped, values.data(), static_cast<std::size_t>(bufferSize));
+        std::memcpy(mapped, values.data(), static_cast<size_t>(bufferSize));
         resource.memory.unmapMemory(); // C API: vkUnmapMemory
 
         std::array<float, elementCount> readback{};
         mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-        std::memcpy(readback.data(), mapped, static_cast<std::size_t>(bufferSize));
+        std::memcpy(readback.data(), mapped, static_cast<size_t>(bufferSize));
         resource.memory.unmapMemory(); // C API: vkUnmapMemory
         if (readback != values)
         {
@@ -312,10 +309,11 @@ private:
 
         return true;
     }
+
     bool createDescriptorSetLayout()
     {
         std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
-        for (std::uint32_t i = 0; i < bindings.size(); ++i)
+        for (uint32_t i = 0; i < bindings.size(); ++i)
         {
             bindings[i].binding = i;
             bindings[i].descriptorType = vk::DescriptorType::eStorageBuffer;
@@ -324,11 +322,12 @@ private:
         }
 
         vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
         layoutInfo.pBindings = bindings.data();
         descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo); // C API: vkCreateDescriptorSetLayout
         return true;
     }
+
     bool createDescriptorPool()
     {
         vk::DescriptorPoolSize poolSize{};
@@ -362,7 +361,7 @@ private:
             bufferInfo.range = bufferSize;
         }
         std::array<vk::WriteDescriptorSet, 3> writes{};
-        for (std::uint32_t i = 0; i < writes.size(); ++i)
+        for (uint32_t i = 0; i < writes.size(); ++i)
         {
             writes[i].dstSet = *descriptorSets[0];
             writes[i].dstBinding = i;
@@ -373,7 +372,6 @@ private:
         device.updateDescriptorSets(writes, {}); // C API: vkUpdateDescriptorSets
         return true;
     }
-    // TODO: createShaderModule() 함수를 추가합니다.
 };
 
 int main()

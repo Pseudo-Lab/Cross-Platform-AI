@@ -16,7 +16,7 @@
 vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
 ```
 
-처음에는 빈 RAII 객체로 두고, 생성 정보를 채운 뒤 실제 레이아웃을 저장하겠습니다. 클래스 끝의 TODO 위치에는 생성 함수의 틀을 만듭니다.
+처음에는 빈 RAII 객체로 두고, 생성 정보를 채운 뒤 실제 레이아웃을 저장하겠습니다. 클래스의 `private` 영역 끝에는 생성 함수의 틀을 만듭니다.
 
 ```cpp
 bool createDescriptorSetLayout()
@@ -28,7 +28,7 @@ bool createDescriptorSetLayout()
 
 디스크립터 셋 안에서 리소스를 구분하는 번호를 바인딩(Binding)이라고 합니다. 우리는 0번에 입력 `inputA`, 1번에 입력 `inputB`, 2번에 출력 `output`을 연결할 예정입니다. 셰이더에서도 같은 번호로 각각의 버퍼를 참조하게 됩니다.
 
-먼저 함수 안에 각 바인딩의 정보를 담을 배열을 만듭니다. `vk::DescriptorSetLayoutBinding` 하나가 바인딩 하나를 설명하므로 배열의 길이는 3입니다. `<array>`와 `<cstdint>`는 이전 장에서 이미 포함했습니다.
+먼저 함수 안에 각 바인딩의 정보를 담을 배열을 만듭니다. `vk::DescriptorSetLayoutBinding` 하나가 바인딩 하나를 설명하므로 배열의 길이는 3입니다. `<array>`와 `<stdint.h>`는 이전 장에서 이미 포함했습니다.
 
 ```cpp
 std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
@@ -37,7 +37,7 @@ std::array<vk::DescriptorSetLayoutBinding, 3> bindings{};
 세 바인딩은 번호만 다르고 모두 스토리지 버퍼 하나를 사용합니다. 같은 설정을 반복해서 적지 않도록 배열 아래에 반복문을 추가합니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < bindings.size(); ++i)
+for (uint32_t i = 0; i < bindings.size(); ++i)
 {
     // 이 번호의 바인딩에 들어갈 리소스를 정의합니다.
 }
@@ -72,7 +72,7 @@ bindings[i].stageFlags = vk::ShaderStageFlagBits::eCompute;
 
 ```cpp
 vk::DescriptorSetLayoutCreateInfo layoutInfo{};
-layoutInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
+layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 layoutInfo.pBindings = bindings.data();
 ```
 

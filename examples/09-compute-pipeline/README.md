@@ -6,7 +6,7 @@
 
 파이프라인 레이아웃(Pipeline layout)은 디스크립터 셋 레이아웃과 푸시 상수의 범위를 정의합니다. 컴퓨트 파이프라인은 이 레이아웃과 셰이더의 진입 함수를 묶어 GPU에서 실행할 연산을 준비합니다. 생성 과정에 장치별 컴파일·최적화 비용이 들 수 있으므로 보통 한 번 만든 파이프라인을 여러 디스패치에서 재사용합니다. [파이프라인과 컴파일](https://docs.vulkan.org/guide/latest/pipeline_cache.html)
 
-[main.cpp](main.cpp)에는 08장까지의 코드가 들어 있습니다. TODO 위치에 두 객체와 생성 함수를 추가합니다. 완성된 코드는 공개 후 `examples/99-completed/09-compute-pipeline.cpp`에서 확인할 수 있습니다. [add.comp](add.comp)와 셰이더 빌드 규칙은 이전 장과 같습니다.
+[main.cpp](main.cpp)에는 08장까지의 코드가 들어 있습니다. 아래 순서대로 두 객체와 생성 함수를 추가합니다. 완성된 코드는 공개 후 `examples/99-completed/09-compute-pipeline.cpp`에서 확인할 수 있습니다. [add.comp](add.comp)와 셰이더 빌드 규칙은 이전 장과 같습니다.
 
 ## 두 레이아웃의 역할 구분하기
 
@@ -29,7 +29,7 @@ vk::raii::PipelineLayout pipelineLayout = nullptr;
 vk::raii::Pipeline computePipeline = nullptr;
 ```
 
-빈 RAII 객체로 시작해 초기화 함수에서 실제 객체를 저장합니다. 클래스 끝의 TODO 위치에 파이프라인 레이아웃 생성 함수의 틀을 추가합니다.
+빈 RAII 객체로 시작해 초기화 함수에서 실제 객체를 저장합니다. 클래스의 `private` 영역 끝에 파이프라인 레이아웃 생성 함수의 틀을 추가합니다.
 
 ```cpp
 bool createPipelineLayout()
@@ -45,10 +45,10 @@ bool createPipelineLayout()
 vk::PushConstantRange pushConstantRange{};
 pushConstantRange.stageFlags = vk::ShaderStageFlagBits::eCompute;
 pushConstantRange.offset = 0;
-pushConstantRange.size = sizeof(std::uint32_t);
+pushConstantRange.size = sizeof(uint32_t);
 ```
 
-`stageFlags`는 값을 읽을 셰이더 단계, `offset`은 푸시 상수 영역 안의 시작 바이트, `size`는 사용할 바이트 수입니다. 이 예제의 GLSL `uint`와 C++ `std::uint32_t`는 4바이트이므로 오프셋 0부터 4바이트를 컴퓨트 단계에 노출합니다.
+`stageFlags`는 값을 읽을 셰이더 단계, `offset`은 푸시 상수 영역 안의 시작 바이트, `size`는 사용할 바이트 수입니다. 이 예제의 GLSL `uint`와 C++ `uint32_t`는 4바이트이므로 오프셋 0부터 4바이트를 컴퓨트 단계에 노출합니다.
 
 범위를 정의하는 것과 값을 전달하는 것은 별개입니다. 이 코드는 `count`의 저장 범위를 선언하고, `elementCount`의 실제 값은 10장에서 커맨드 버퍼에 기록합니다. 푸시 상수의 `offset`과 `size`는 4바이트 배수여야 하며, 사용할 범위는 장치의 `maxPushConstantsSize` 안에 있어야 합니다. 여기서는 `uint` 하나만 사용합니다.
 

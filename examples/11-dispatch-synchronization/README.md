@@ -4,7 +4,7 @@
 
 10장에서 기록한 커맨드 버퍼를 컴퓨트 큐에 제출하고, GPU의 계산이 끝나면 출력 버퍼를 CPU에서 읽습니다. 결과를 `A[i] + B[i]`와 비교한 뒤 입력을 바꿔 같은 명령을 한 번 더 실행합니다.
 
-[main.cpp](main.cpp)의 TODO를 채워 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/11-dispatch-synchronization.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)에 아래 순서대로 코드를 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/11-dispatch-synchronization.cpp`에서 확인할 수 있습니다.
 
 ## 결과를 읽기 전에 필요한 것
 
@@ -22,13 +22,18 @@ GPU 작업의 완료와 그 쓰기 결과가 CPU에 보이는 것은 별도 조�
 
 ## 호스트 읽기를 위한 배리어 기록하기
 
-`recordCommandBuffer()`에서 `dispatch()` 다음, `end()` 이전의 TODO 위치에 배리어를 추가합니다. 먼저 이전 접근과 이후 접근의 종류를 지정합니다.
+`recordCommandBuffer()`에서 `dispatch()` 다음, `end()` 이전에 배리어를 추가합니다. 먼저 이전 접근과 이후 접근의 종류를 지정합니다.
 
 ```cpp
 vk::BufferMemoryBarrier hostBarrier{};
 hostBarrier.srcAccessMask = vk::AccessFlagBits::eShaderWrite;
 hostBarrier.dstAccessMask = vk::AccessFlagBits::eHostRead;
 ```
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> `dstAccessMask`에 `eHostRead`만 지정한 뒤 CPU가 쓰거나 셰이더가 읽으면 어떻게 될까요?
 
 이전 접근은 셰이더가 `output`에 쓰는 작업이고, 이후 접근은 CPU가 그 결과를 읽는 작업입니다. 다음으로 적용할 버퍼 영역을 지정합니다.
 
@@ -53,15 +58,21 @@ cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader,
 
 배리어는 CPU를 기다리게 하는 호출이 아닙니다. 기록한 배리어까지 실행됐는지 CPU가 확인하는 부분은 펜스로 작성합니다. [버퍼 메모리 배리어의 접근 범위](https://docs.vulkan.org/spec/latest/chapters/synchronization.html#synchronization-buffer-memory-barrier)
 
+> [!NOTE]
+> **생각해볼 점**
+>
+> - 파이프라인 단계와 접근 마스크는 각각 무엇을 지정하나요?
+> - 이 예제에서 펜스를 기다리는 것과 `ShaderWrite → HostRead` 배리어를 넣는 것은 각각 어떤 역할을 하나요?
+
 ## 펜스 만들기
 
-펜스(Fence)는 큐 작업의 완료를 호스트가 확인하는 객체입니다. `device.waitIdle()`로 장치의 모든 큐를 기다리는 대신, 결과를 읽을 제출의 완료를 지정할 수 있어 사용합니다. `private`의 `commandBuffers` 뒤 TODO에 멤버를 추가합니다.
+펜스(Fence)는 큐 작업의 완료를 호스트가 확인하는 객체입니다. `device.waitIdle()`로 장치의 모든 큐를 기다리는 대신, 결과를 읽을 제출의 완료를 지정할 수 있어 사용합니다. `private`의 `commandBuffers` 뒤에 멤버를 추가합니다.
 
 ```cpp
 vk::raii::Fence fence = nullptr;
 ```
 
-클래스 끝의 TODO에 생성 함수를 만듭니다.
+클래스의 `private` 영역 끝에 생성 함수를 만듭니다.
 
 ```cpp
 bool createFence()
@@ -107,13 +118,13 @@ bool createStorageBuffers()
 bool writeBuffer(BufferResource& resource, const std::array<float, elementCount>& values)
 {
     void* mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-    std::memcpy(mapped, values.data(), static_cast<std::size_t>(bufferSize));
+    std::memcpy(mapped, values.data(), static_cast<size_t>(bufferSize));
     resource.memory.unmapMemory(); // C API: vkUnmapMemory
     return true;
 }
 ```
 
-헤더 목록의 TODO에 계산 결과 검사와 초기값 생성에 필요한 헤더를 추가합니다.
+헤더 목록에 계산 결과 검사와 초기값 생성에 필요한 헤더를 추가합니다.
 
 ```cpp
 #include <cmath>
@@ -123,7 +134,7 @@ bool writeBuffer(BufferResource& resource, const std::array<float, elementCount>
 클래스 끝에 `writeInputs()`를 추가합니다. 첫 실행은 `round = 0`, 두 번째 실행은 `round = 1`로 호출합니다.
 
 ```cpp
-bool writeInputs(std::uint32_t round)
+bool writeInputs(uint32_t round)
 {
 }
 ```
@@ -135,7 +146,7 @@ std::array<float, elementCount> valuesA{};
 std::array<float, elementCount> valuesB{};
 std::array<float, elementCount> initialOutput{};
 initialOutput.fill(std::numeric_limits<float>::quiet_NaN());
-for (std::uint32_t i = 0; i < elementCount; ++i)
+for (uint32_t i = 0; i < elementCount; ++i)
 {
     valuesA[i] = static_cast<float>(i + round);
     valuesB[i] = 10.0f + static_cast<float>(i + round);
@@ -191,12 +202,17 @@ return true;
 
 `VK_TRUE`는 전달한 펜스가 모두 완료되기를 기다린다는 뜻이며 여기서는 하나만 전달합니다. `UINT64_MAX`로 무기한 대기를 요청합니다. 성공이 확인된 뒤에만 결과를 읽거나 버퍼를 재사용합니다. `waitIdle()`은 펜스 대기에 성공하지 못한 경로에서 미완료 리소스를 바로 해제하지 않도록 둔 처리이며, 정상 실행에서는 펜스로 해당 제출의 완료를 확인합니다. [펜스 대기 결과](https://docs.vulkan.org/refpages/latest/refpages/source/vkWaitForFences.html)
 
+> [!NOTE]
+> **생각해볼 점**
+>
+> 펜스, 파이프라인 배리어, 세마포어는 각각 누가 무엇을 기다리도록 하나요? 특히, 배리어와 세마포어의 차이는 무엇인가요?
+
 ## CPU 기준값과 비교하기
 
 클래스 끝에 결과 확인 함수를 추가합니다.
 
 ```cpp
-bool verifyOutput(std::uint32_t round)
+bool verifyOutput(uint32_t round)
 {
 }
 ```
@@ -206,7 +222,7 @@ bool verifyOutput(std::uint32_t round)
 ```cpp
 std::array<float, elementCount> results{};
 void* mapped = output.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-std::memcpy(results.data(), mapped, static_cast<std::size_t>(bufferSize));
+std::memcpy(results.data(), mapped, static_cast<size_t>(bufferSize));
 output.memory.unmapMemory(); // C API: vkUnmapMemory
 ```
 
@@ -215,7 +231,7 @@ output.memory.unmapMemory(); // C API: vkUnmapMemory
 이어서 각 원소를 CPU에서 계산한 기준값과 비교합니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < elementCount; ++i)
+for (uint32_t i = 0; i < elementCount; ++i)
 {
     const float a = static_cast<float>(i + round);
     const float b = 10.0f + static_cast<float>(i + round);
@@ -246,7 +262,7 @@ bool run()
     {
         return false;
     }
-    for (std::uint32_t round = 0; round < 2; ++round)
+    for (uint32_t round = 0; round < 2; ++round)
     {
         if (round != 0)
         {

@@ -27,7 +27,7 @@ RAII 멤버는 선언한 순서의 역순으로 소멸합니다. 셋을 풀 뒤�
 
 ## 풀의 용량 정하기
 
-풀은 할당할 셋과 디스크립터를 담을 용량이 필요합니다. 우선 클래스 끝의 TODO 위치에 풀 생성 함수의 틀을 만듭니다.
+풀은 할당할 셋과 디스크립터를 담을 용량이 필요합니다. 우선 클래스의 `private` 영역 끝에 풀 생성 함수의 틀을 만듭니다.
 
 ```cpp
 bool createDescriptorPool()
@@ -86,7 +86,7 @@ std::cout << "Descriptor pool created: max sets " << poolInfo.maxSets << '\n';
 유형별 디스크립터 용량은 생성 정보에 연결한 항목들을 순회하며 출력합니다. 용량 설정을 바꾸면 출력에도 같은 값이 반영됩니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < poolInfo.poolSizeCount; ++i)
+for (uint32_t i = 0; i < poolInfo.poolSizeCount; ++i)
 {
     const auto& capacity = poolInfo.pPoolSizes[i];
     std::cout << "  " << vk::to_string(capacity.type)
@@ -168,7 +168,7 @@ for (auto& bufferInfo : bufferInfos)
 
 ```cpp
 std::array<vk::WriteDescriptorSet, 3> writes{};
-for (std::uint32_t i = 0; i < writes.size(); ++i)
+for (uint32_t i = 0; i < writes.size(); ++i)
 {
     // 이 바인딩에 써 넣을 디스크립터 정보를 지정합니다.
 }
@@ -230,7 +230,7 @@ for (const auto& write : writes)
 반복문 안의 주석을 다음 코드로 바꿉니다. 버퍼 핸들은 해당 리소스를 식별하며 실행마다 달라질 수 있습니다. 오프셋과 범위는 위에서 디스크립터에 설정한 값입니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < write.descriptorCount; ++i)
+for (uint32_t i = 0; i < write.descriptorCount; ++i)
 {
     const auto& info = write.pBufferInfo[i];
     std::cout << "  Buffer " << static_cast<VkBuffer>(info.buffer)
@@ -243,6 +243,17 @@ for (std::uint32_t i = 0; i < write.descriptorCount; ++i)
 ```cpp
 return true;
 ```
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> GPU의 이전 사용이 끝났고 다음 실행 명령을 기록하기 전이라고 가정합니다. 아래 상황마다 버퍼, 디스크립터 셋, 풀, 레이아웃 중 무엇을 재사용하고 무엇을 갱신하거나 새로 만들어야 할까요?
+>
+> - 기존 A와 B 버퍼의 같은 영역에 새 숫자를 넣어 C에 결과를 저장합니다. 원소 수와 자료형은 같습니다.
+> - A 대신 크기와 자료형이 같은 A′ 버퍼를 사용합니다. A′는 이미 준비되어 있고 기존 A와의 연결 정보는 보존하지 않아도 됩니다.
+> - `C₀ = A₀ + B₀`와 `C₁ = A₁ + B₁`을 번갈아 실행합니다. 여섯 버퍼가 준비되어 있고 셰이더와 바인딩 구조는 같습니다. 첫 묶음의 셋만 있으며, 풀에는 여유가 있습니다. 두 연결 정보를 모두 보관하고 실행마다 디스크립터를 다시 쓰지 않으려면 무엇이 필요할까요?
+> - `maxSets = 3`, 스토리지 버퍼 디스크립터 총용량이 6인 풀에서 디스크립터 3개짜리 셋 두 개를 할당했습니다. 기존 셋을 유지하면서 같은 구조의 셋 하나를 더 추가하려고 하며, 새 셋에 연결할 버퍼들은 준비되어 있습니다. 기존 풀의 용량이 충분한가요? 부족하다면 무엇을 준비해야 하며, 레이아웃도 다시 만들어야 할까요?
+> - 기존 스토리지 버퍼 바인딩 0~2에 더해, 새 셰이더가 설정값을 받을 유니폼 버퍼 바인딩 3을 요구합니다. 설정값 버퍼가 준비되어 있고 풀의 셋 수와 타입별 용량도 충분합니다. 기존 셋에 write만 추가하면 될까요? 파이프라인 설정은 제외하고 생각해 보세요.
 
 ## 초기화 순서에 연결하기
 

@@ -6,7 +6,7 @@
 
 셰이더는 GLSL로 작성하고, 빌드할 때 SPIR-V 바이너리로 변환합니다. C++ 프로그램은 이 바이너리를 읽어 Vulkan에 전달합니다. 이번 장의 완료 지점은 모듈 생성이며, GPU 연산은 이후 명령을 기록하고 제출하는 장에서 실행합니다.
 
-[add.comp](add.comp)와 [main.cpp](main.cpp)를 엽니다. 셰이더 파일은 완성된 형태로 제공되므로 먼저 선언과 계산을 살펴봅니다. `main.cpp`에는 07장까지의 코드가 들어 있으며 이번 장에서 추가할 위치에 TODO가 있습니다. 완성된 코드는 공개 후 `examples/99-completed/08-compute-shader.cpp`에서 확인할 수 있습니다.
+[add.comp](add.comp)와 [main.cpp](main.cpp)를 엽니다. 셰이더 파일은 완성된 형태로 제공되므로 먼저 선언과 계산을 살펴봅니다. `main.cpp`에는 07장까지의 코드가 들어 있습니다. 완성된 코드는 공개 후 `examples/99-completed/08-compute-shader.cpp`에서 확인할 수 있습니다.
 
 ## 한 번의 셰이더 실행이 맡을 일
 
@@ -21,6 +21,11 @@ layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 ```
 
 워크그룹 하나에 X축 방향으로 인보케이션 64개를 배치합니다. 그룹 크기를 고정하고 입력 크기에 따라 그룹 수를 늘리면 같은 셰이더로 더 큰 배열도 처리할 수 있습니다. 실행할 그룹 수는 [10장 커맨드 버퍼](../10-command-buffers/README.md)에서 정하며, `elementCount = 8`일 때는 한 그룹의 64개 중 8개만 계산하도록 범위를 검사합니다. `64`는 실습용 선택이며 모든 GPU에서 최적인 크기를 뜻하지는 않습니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> 인보케이션, 워크그룹, 디스패치는 각각 무엇이며 CUDA의 어떤 개념과 대응하나요?
 
 ## 디스크립터 바인딩에 맞춰 버퍼 선언하기
 
@@ -74,7 +79,7 @@ layout(push_constant) uniform Parameters
 } params;
 ```
 
-푸시 상수는 원소 수처럼 작은 값을 커맨드 버퍼에 기록해 셰이더에 전달하는 방법입니다. 4바이트의 `count`를 위해 별도 버퍼와 디스크립터를 관리할 필요가 없어 여기서 사용합니다. C++에서는 32비트 부호 없는 정수인 `std::uint32_t`로 맞추겠습니다.
+푸시 상수는 원소 수처럼 작은 값을 커맨드 버퍼에 기록해 셰이더에 전달하는 방법입니다. 4바이트의 `count`를 위해 별도 버퍼와 디스크립터를 관리할 필요가 없어 여기서 사용합니다. C++에서는 32비트 부호 없는 정수인 `uint32_t`로 맞추겠습니다.
 
 이 선언만으로 `count`에 8이 들어가지는 않습니다. 09장에서 이 값의 크기와 셰이더 접근 범위를 파이프라인 레이아웃에 정의하고, 10장에서 실제 값을 기록합니다.
 
@@ -119,7 +124,7 @@ CMake는 생성한 바이너리의 절대 경로를 `ADD_SHADER_PATH`라는 C++ 
 
 셰이더 모듈은 SPIR-V 코드와 그 안의 진입 함수를 담는 Vulkan 객체입니다. 다음 장에서는 이 모듈에서 실행할 함수를 고르고 리소스 인터페이스를 연결해 파이프라인을 만듭니다. 모듈 자체는 버퍼 연결이나 실행 명령을 포함하지 않습니다. [VkShaderModule](https://docs.vulkan.org/refpages/latest/refpages/source/VkShaderModule.html)
 
-이제 [main.cpp](main.cpp)로 돌아갑니다. 파일 위쪽의 헤더 목록에 파일 입력을 위한 헤더를 추가합니다. `<vector>`와 `<cstdint>`는 앞 장 코드에 이미 있습니다.
+이제 [main.cpp](main.cpp)로 돌아갑니다. 파일 위쪽의 헤더 목록에 파일 입력을 위한 헤더를 추가합니다. `<vector>`와 `<stdint.h>`는 앞 장 코드에 이미 있습니다.
 
 ```cpp
 #include <fstream>
@@ -131,7 +136,7 @@ CMake는 생성한 바이너리의 절대 경로를 `ADD_SHADER_PATH`라는 C++ 
 vk::raii::ShaderModule shaderModule = nullptr;
 ```
 
-클래스 끝의 TODO 위치에 다음 함수의 틀을 추가합니다.
+클래스의 `private` 영역 끝에 다음 함수의 틀을 추가합니다.
 
 ```cpp
 bool createShaderModule()
@@ -159,7 +164,7 @@ if (!file)
 
 ```cpp
 const std::streamsize byteCount = file.tellg();
-if (byteCount <= 0 || byteCount % sizeof(std::uint32_t) != 0)
+if (byteCount <= 0 || byteCount % sizeof(uint32_t) != 0)
 {
     std::cerr << "Invalid SPIR-V byte count.\n";
     return false;
@@ -170,14 +175,14 @@ SPIR-V는 32비트 워드로 구성되므로 크기가 0보다 큰 4바이트 �
 
 ## 바이너리를 32비트 배열로 읽기
 
-같은 함수에 바이너리를 담을 배열을 추가합니다. `byteCount`는 바이트 수이므로 `sizeof(std::uint32_t)`로 나눠 원소 수를 정합니다.
+같은 함수에 바이너리를 담을 배열을 추가합니다. `byteCount`는 바이트 수이므로 `sizeof(uint32_t)`로 나눠 원소 수를 정합니다.
 
 ```cpp
-std::vector<std::uint32_t> code(static_cast<std::size_t>(byteCount) / sizeof(std::uint32_t));
+std::vector<uint32_t> code(static_cast<size_t>(byteCount) / sizeof(uint32_t));
 file.seekg(0);
 ```
 
-`std::vector<std::uint32_t>`를 사용하면 뒤에서 Vulkan에 전달할 포인터의 타입과 정렬을 맞출 수 있습니다. 파일 끝에서 크기를 읽었으므로 `seekg(0)`으로 다시 처음으로 이동합니다.
+`std::vector<uint32_t>`를 사용하면 뒤에서 Vulkan에 전달할 포인터의 타입과 정렬을 맞출 수 있습니다. 파일 끝에서 크기를 읽었으므로 `seekg(0)`으로 다시 처음으로 이동합니다.
 
 이어서 전체 바이트를 읽습니다.
 
@@ -199,7 +204,7 @@ eva의 [`SpvBlob::readFrom()`](https://github.com/vaistrata/eva/blob/2a31c83cc83
 
 ```cpp
 vk::ShaderModuleCreateInfo moduleInfo{};
-moduleInfo.codeSize = static_cast<std::size_t>(byteCount);
+moduleInfo.codeSize = static_cast<size_t>(byteCount);
 moduleInfo.pCode = code.data();
 ```
 

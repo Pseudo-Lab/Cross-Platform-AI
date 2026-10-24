@@ -6,22 +6,22 @@
 
 이번에는 입력 버퍼 두 개와 출력 버퍼 하나를 만들겠습니다. 각 버퍼에 CPU로 값을 기록하고 다시 읽어 확인하는 것까지 진행합니다. GPU에서 이 값을 연산하는 과정은 이후 장에서 이어집니다.
 
-[main.cpp](main.cpp)를 열고 TODO 위치를 따라 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/05-buffers-memory.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)를 열고 아래 순서대로 작성해 보겠습니다. 완성된 코드는 공개 후 `examples/99-completed/05-buffers-memory.cpp`에서 확인할 수 있습니다.
 
 ## 버퍼 크기와 보관할 자리 만들기
 
-입력값과 읽어 온 값을 배열에 담기 위해 `<array>`가 필요합니다. 복사할 바이트 수에는 `std::size_t`를 사용하므로 `<cstddef>`도 추가합니다. 파일 위쪽의 헤더 TODO를 다음 코드로 바꿉니다.
+입력값과 읽어 온 값을 배열에 담기 위해 `<array>`가 필요합니다. 복사할 바이트 수에는 `size_t`를 사용하므로 `<stddef.h>`도 추가합니다. 파일 위쪽에 다음 헤더를 추가합니다.
 
 ```cpp
 #include <array>
-#include <cstddef>
+#include <stddef.h>
 ```
 
-각 버퍼에는 4바이트 `float` 값 8개를 담겠습니다. `private` 영역의 `validationLayer` 다음 TODO 위치에 원소 개수와 버퍼 크기를 적습니다.
+각 버퍼에는 4바이트 `float` 값 8개를 담겠습니다. `private` 영역의 `validationLayer` 다음에 원소 개수와 버퍼 크기를 적습니다.
 
 ```cpp
 static_assert(sizeof(float) == 4);
-static constexpr std::uint32_t elementCount = 8;
+static constexpr uint32_t elementCount = 8;
 static constexpr vk::DeviceSize bufferSize = sizeof(float) * elementCount;
 ```
 
@@ -39,7 +39,7 @@ struct BufferResource
 
 멤버는 선언의 역순으로 소멸합니다. `memory`를 먼저 선언했으므로 `buffer`를 해제한 다음 연결된 메모리를 해제하게 됩니다.
 
-이제 `computeQueue` 아래의 TODO를 입력 두 개와 출력 하나를 담을 멤버로 바꿉니다.
+이제 `computeQueue` 아래에 입력 두 개와 출력 하나를 담을 멤버를 추가합니다.
 
 ```cpp
 BufferResource inputA;
@@ -49,7 +49,7 @@ BufferResource output;
 
 ## 버퍼 객체 만들기
 
-입력과 출력 버퍼는 같은 방식으로 만들 수 있습니다. 클래스 끝의 함수 TODO 위치에 버퍼 하나를 생성할 함수의 틀을 추가합니다. `size`로 바이트 크기를 받고, 생성한 객체는 참조로 받은 `resource`에 저장하겠습니다.
+입력과 출력 버퍼는 같은 방식으로 만들 수 있습니다. 클래스의 `private` 영역 끝에 버퍼 하나를 생성할 함수의 틀을 추가합니다. `size`로 바이트 크기를 받고, 생성한 객체는 참조로 받은 `resource`에 저장하겠습니다.
 
 ```cpp
 bool createBuffer(vk::DeviceSize size, BufferResource& resource)
@@ -102,8 +102,8 @@ const auto properties = vk::MemoryPropertyFlagBits::eHostVisible
 잠시 `createBuffer()`에서 나와 그 아래에 다음 함수의 틀을 추가합니다.
 
 ```cpp
-bool findMemoryType(std::uint32_t typeFilter, vk::MemoryPropertyFlags properties,
-                    std::uint32_t& typeIndex)
+bool findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties,
+                    uint32_t& typeIndex)
 {
 }
 ```
@@ -119,7 +119,7 @@ const auto memoryProperties = physicalDevice.getMemoryProperties(); // C API: vk
 유형마다 지원하는 속성이 다를 수 있으므로, 목록을 순서대로 검사합니다. 조회 코드 아래에 반복문의 틀을 추가합니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
+for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
 {
     // 버퍼의 조건과 필요한 메모리 속성을 검사합니다.
 }
@@ -162,7 +162,7 @@ return false;
 검색 함수가 완성됐습니다. `createBuffer()`로 돌아가 `properties`를 선언한 다음에 호출을 추가합니다.
 
 ```cpp
-std::uint32_t memoryTypeIndex = 0;
+uint32_t memoryTypeIndex = 0;
 if (!findMemoryType(requirements.memoryTypeBits, properties, memoryTypeIndex))
 {
     return false;
@@ -170,6 +170,11 @@ if (!findMemoryType(requirements.memoryTypeBits, properties, memoryTypeIndex))
 ```
 
 검색에 실패하면 이 버퍼의 초기화를 중단합니다. 성공했다면 `memoryTypeIndex`에 사용할 유형의 인덱스가 들어 있으므로 메모리 할당으로 진행할 수 있습니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> `eHostVisible`, `eHostCoherent`, `eDeviceLocal`은 각각 무엇을 보장하나요? `eHostVisible`과 `eDeviceLocal`을 동시에 가진 메모리 타입이 있는지 자신의 GPU에서 확인해 보세요. 외장 GPU에서 `eDeviceLocal`만 있는 경우, `eHostVisible`만 있는 경우, 두 속성이 모두 있는 경우에 메모리는 각각 어디에 할당될까요?
 
 ## 메모리 할당하고 버퍼에 연결하기
 
@@ -204,6 +209,11 @@ std::cout << "Buffer memory: size " << requirements.size
 return true;
 ```
 
+> [!NOTE]
+> **생각해볼 점**
+>
+> 버퍼 생성, 메모리 할당, `bindMemory()`는 각각 무엇을 하나요? Vulkan이 이 세 단계를 나눈 이유는 무엇일까요? CUDA의 `cudaMalloc()`과 비교해 보세요.
+
 ## CPU에서 값 기록하기
 
 버퍼와 메모리를 준비했으니 실제로 값을 넣어 보겠습니다. `findMemoryType()` 아래에 기록과 확인을 담당할 함수의 틀을 추가합니다.
@@ -227,7 +237,7 @@ void* mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
 `mapMemory()`가 반환한 주소를 통해 CPU가 메모리에 접근할 수 있습니다. 이 주소로 배열의 바이트를 복사하고, 사용을 마쳤으면 매핑을 해제합니다.
 
 ```cpp
-std::memcpy(mapped, values.data(), static_cast<std::size_t>(bufferSize));
+std::memcpy(mapped, values.data(), static_cast<size_t>(bufferSize));
 resource.memory.unmapMemory(); // C API: vkUnmapMemory
 ```
 
@@ -240,7 +250,7 @@ resource.memory.unmapMemory(); // C API: vkUnmapMemory
 ```cpp
 std::array<float, elementCount> readback{};
 mapped = resource.memory.mapMemory(0, bufferSize); // C API: vkMapMemory
-std::memcpy(readback.data(), mapped, static_cast<std::size_t>(bufferSize));
+std::memcpy(readback.data(), mapped, static_cast<size_t>(bufferSize));
 resource.memory.unmapMemory(); // C API: vkUnmapMemory
 ```
 
@@ -269,6 +279,11 @@ return true;
 ```
 
 여기서는 CPU가 기록한 값을 CPU에서 다시 읽었습니다. 아직 GPU 작업을 제출하지 않았으므로 큐 제출이나 GPU 완료 대기 코드는 필요하지 않습니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> `mapMemory()`, `memcpy()`, `unmapMemory()`는 각각 무엇을 하나요? 매핑을 해제한 뒤에도 기록한 값과 반환받았던 포인터를 사용할 수 있나요? CPU가 쓴 값 대신 GPU가 계산한 결과를 읽는다면, `eHostCoherent`만으로 충분할까요?
 
 ## 입력과 출력 버퍼 준비하기
 
@@ -309,7 +324,7 @@ const std::array<float, elementCount> initialOutput{};
 `{}`로 초기화한 원소는 모두 0입니다. 출력 배열은 이대로 두고, 입력 A에는 0부터 7까지, B에는 10부터 17까지 넣겠습니다.
 
 ```cpp
-for (std::uint32_t i = 0; i < elementCount; ++i)
+for (uint32_t i = 0; i < elementCount; ++i)
 {
     valuesA[i] = static_cast<float>(i);
     valuesB[i] = 10.0f + static_cast<float>(i);

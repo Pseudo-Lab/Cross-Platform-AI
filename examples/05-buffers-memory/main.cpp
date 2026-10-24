@@ -1,7 +1,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
-// TODO: <array>와 <cstddef> 헤더를 추가합니다.
-#include <cstdint>
+#include <stdint.h>
 #include <cstring>
 #include <iostream>
 #include <optional>
@@ -22,20 +21,16 @@ public:
 private:
     static constexpr const char* validationLayer = "VK_LAYER_KHRONOS_validation";
 
-    // TODO: 버퍼 크기와 BufferResource 구조체를 추가합니다.
-
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice physicalDevice = nullptr;
-    std::uint32_t computeQueueFamilyIndex = 0;
+    uint32_t computeQueueFamilyIndex = 0;
     vk::raii::Device device = nullptr;
     vk::raii::Queue computeQueue = nullptr;
-    // TODO: inputA, inputB, output 멤버를 추가합니다.
 
     bool initVulkan()
     {
-        // TODO: 마지막에 createStorageBuffers() 호출을 연결합니다.
         return createInstance()
             && setupDebugMessenger()
             && pickPhysicalDevice()
@@ -161,11 +156,11 @@ private:
         return false;
     }
 
-    static std::optional<std::uint32_t> findComputeQueueFamily(
+    static std::optional<uint32_t> findComputeQueueFamily(
         const vk::raii::PhysicalDevice& candidate)
     {
         const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGetPhysicalDeviceQueueFamilyProperties
-        for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
+        for (uint32_t index = 0; index < queueFamilies.size(); ++index)
         {
             const auto& family = queueFamilies[index];
             if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
@@ -175,7 +170,6 @@ private:
         }
         return std::nullopt;
     }
-
 
     bool createLogicalDevice()
     {
@@ -195,8 +189,6 @@ private:
         computeQueue = vk::raii::Queue(device, computeQueueFamilyIndex, 0); // C API: vkGetDeviceQueue
         return true;
     }
-    // TODO: createStorageBuffers(), createBuffer(), findMemoryType(),
-    // writeAndVerifyBuffer()를 추가합니다.
 };
 
 int main()

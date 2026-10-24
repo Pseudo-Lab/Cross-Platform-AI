@@ -21,7 +21,7 @@ void run()
 
 ## 인스턴스를 보관할 자리 만들기
 
-인스턴스는 생성 함수가 끝난 뒤에도 사용할 수 있어야 합니다. `private` 바로 아래의 멤버용 TODO를 다음 코드로 바꿉니다.
+인스턴스는 생성 함수가 끝난 뒤에도 사용할 수 있어야 합니다. `private` 바로 아래에 다음 멤버를 추가합니다.
 
 ```cpp
 vk::raii::Context context;
@@ -30,7 +30,7 @@ vk::raii::Instance instance = nullptr;
 
 `context`는 Vulkan 로더를 통해 인스턴스 생성에 필요한 함수에 접근하게 해 줍니다. `instance`는 아직 생성하지 않았으므로 `nullptr`로 초기화합니다.
 
-이어서 `private` 영역의 함수용 TODO 자리에 인스턴스 생성 함수의 틀을 추가합니다. 이제부터 나오는 코드는 이 함수 안에 순서대로 작성합니다.
+이어서 `private` 영역에 인스턴스 생성 함수의 틀을 추가합니다. 이제부터 나오는 코드는 이 함수 안에 순서대로 작성합니다.
 
 ```cpp
 void createInstance()
@@ -107,7 +107,7 @@ std::cout << "Instance created.\n";
 
 생성한 객체를 멤버인 `instance`에 저장했습니다. 생성이 성공하면 다음 줄의 메시지가 출력됩니다. 이제 `createInstance()`가 완성됐습니다.
 
-이 함수가 실행되도록 기존 `initVulkan()`의 TODO를 호출 코드로 바꿉니다.
+이 함수가 실행되도록 기존 `initVulkan()`에 호출 코드를 추가합니다.
 
 ```cpp
 void initVulkan()

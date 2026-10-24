@@ -13,7 +13,7 @@
 
 이 덧셈은 한 셰이더로 합쳐 디스패치와 중간 버퍼 접근을 줄일 수도 있습니다. 여기서는 서로 다른 연산을 연결할 때도 필요한 버퍼 연결·동기화를 살펴보려고 두 디스패치로 나눕니다.
 
-[main.cpp](main.cpp)의 TODO를 따라 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/13-multiple-dispatches.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)에 아래 순서대로 코드를 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/13-multiple-dispatches.cpp`에서 확인할 수 있습니다.
 
 ## 파이프라인과 입력 연결 구분하기
 
@@ -45,7 +45,7 @@ intermediate의 버퍼 메모리 배리어
 
 ## 중간 버퍼 추가하기
 
-`output` 멤버 아래의 TODO 위치에 중간 버퍼를 선언합니다.
+`output` 멤버 아래에 중간 버퍼를 선언합니다.
 
 ```cpp
 BufferResource intermediate;
@@ -88,7 +88,7 @@ const std::array<vk::DescriptorSetLayout, 2> layouts = {*descriptorSetLayout, *d
 ```cpp
 vk::DescriptorSetAllocateInfo allocInfo{};
 allocInfo.descriptorPool = *descriptorPool;
-allocInfo.descriptorSetCount = static_cast<std::uint32_t>(layouts.size());
+allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
 allocInfo.pSetLayouts = layouts.data();
 descriptorSets = device.allocateDescriptorSets(allocInfo); // C API: vkAllocateDescriptorSets
 ```
@@ -109,7 +109,7 @@ const std::array<std::array<vk::Buffer, 3>, 2> buffers = {{
 이제 셋마다 세 디스크립터를 갱신할 반복문의 틀을 만듭니다.
 
 ```cpp
-for (std::uint32_t set = 0; set < buffers.size(); ++set)
+for (uint32_t set = 0; set < buffers.size(); ++set)
 {
     std::array<vk::DescriptorBufferInfo, 3> bufferInfos{};
     std::array<vk::WriteDescriptorSet, 3> writes{};
@@ -119,7 +119,7 @@ for (std::uint32_t set = 0; set < buffers.size(); ++set)
 반복문 안의 두 배열 선언 다음에 바인딩별 정보를 채우는 반복문을 추가합니다.
 
 ```cpp
-for (std::uint32_t binding = 0; binding < bufferInfos.size(); ++binding)
+for (uint32_t binding = 0; binding < bufferInfos.size(); ++binding)
 {
     bufferInfos[binding].buffer = buffers[set][binding];
     bufferInfos[binding].offset = 0;
@@ -155,7 +155,7 @@ return true;
 
 `recordCommandBuffer()`에는 12장의 입력 복사와 업로드 배리어가 이미 들어 있습니다. 이어지는 첫 번째 `dispatch()`도 그대로 사용합니다. 다만 `descriptorSets[0]`의 출력이 이제 `intermediate`이므로 첫 연산은 `T = A + B`를 기록합니다.
 
-첫 `dispatch()` 다음 TODO 위치에 `intermediateBarrier`를 추가합니다. 기존 `downloadBarrier`보다 앞에 와야 합니다.
+첫 `dispatch()` 다음에 `intermediateBarrier`를 추가합니다. 기존 `downloadBarrier`보다 앞에 와야 합니다.
 
 ```cpp
 vk::BufferMemoryBarrier intermediateBarrier{};
@@ -176,6 +176,11 @@ cmd.pipelineBarrier(vk::PipelineStageFlagBits::eComputeShader,
 ```
 
 단계가 양쪽 모두 같아도 앞의 셰이더 쓰기와 뒤의 셰이더 읽기는 별개 접근입니다. 이 배리어가 `intermediate`의 쓰기 결과를 뒤의 읽기에 연결합니다. 셰이더 안의 워크그룹 동기화로 서로 다른 디스패치 사이의 이 의존성을 대체할 수는 없습니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> 앞 작업이 X에 쓰고 뒤 작업이 읽는 경우를, 앞 작업이 X를 읽고 뒤 작업이 덮어쓰는 경우로 바꾸면 필요한 의존성도 같을까요? X 외에는 두 작업이 공유하는 자원이 없다고 가정합니다.
 
 ## 두 번째 셋 바인딩하고 다시 디스패치하기
 
@@ -208,7 +213,7 @@ std::cout << "Command buffer recorded: " << groupCount << " workgroups per dispa
 
 ## CPU 기준값 바꾸기
 
-`verifyOutput()`의 `expected` TODO를 다음과 같이 바꿉니다.
+`verifyOutput()`의 `expected` 계산식을 다음과 같이 바꿉니다.
 
 ```cpp
 const float expected = (a + b) + b;

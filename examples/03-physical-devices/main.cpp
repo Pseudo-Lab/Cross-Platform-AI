@@ -21,11 +21,9 @@ private:
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
-    // TODO: 물리적 디바이스와 큐 패밀리 인덱스 멤버를 추가합니다.
 
     bool initVulkan()
     {
-        // TODO: pickPhysicalDevice()를 초기화 순서에 추가합니다.
         return createInstance() && setupDebugMessenger();
     }
 
@@ -117,8 +115,6 @@ private:
                   << ": " << callbackData->pMessage << '\n';
         return VK_FALSE;
     }
-
-    // TODO: findComputeQueueFamily(), pickPhysicalDevice(), printDeviceInfo()를 추가합니다.
 };
 
 int main()

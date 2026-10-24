@@ -14,15 +14,15 @@
 
 ```cpp
 vk::raii::PhysicalDevice physicalDevice = nullptr;
-std::uint32_t computeQueueFamilyIndex = 0;
+uint32_t computeQueueFamilyIndex = 0;
 ```
 
 `physicalDevice`에는 선택한 장치를 저장합니다. `computeQueueFamilyIndex`는 그 장치에서 사용할 큐 패밀리의 번호이며, 큐 패밀리를 조사한 뒤 채우겠습니다.
 
-이번 장에서 사용할 헤더도 파일 위쪽에 추가합니다. `<cstdint>`는 인덱스의 정수형, `<optional>`은 큐 검색 결과, `<utility>`는 장치를 멤버로 옮길 때 사용합니다.
+이번 장에서 사용할 헤더도 파일 위쪽에 추가합니다. `<stdint.h>`는 인덱스의 정수형, `<optional>`은 큐 검색 결과, `<utility>`는 장치를 멤버로 옮길 때 사용합니다.
 
 ```cpp
-#include <cstdint>
+#include <stdint.h>
 #include <optional>
 #include <utility>
 ```
@@ -96,7 +96,7 @@ Vulkan에서는 GPU가 처리할 명령을 큐(Queue)에 제출합니다. 큐 �
 잠시 `pickPhysicalDevice()`에서 나와, 같은 `private` 영역에 큐 패밀리를 검색할 함수를 추가합니다. 이 함수는 검사할 장치를 받아 사용할 패밀리의 인덱스를 돌려줍니다. 검색 결과가 없을 수도 있으므로 반환형은 값의 유무를 함께 표현하는 `std::optional`로 둡니다.
 
 ```cpp
-static std::optional<std::uint32_t> findComputeQueueFamily(
+static std::optional<uint32_t> findComputeQueueFamily(
     const vk::raii::PhysicalDevice& candidate)
 {
 }
@@ -111,7 +111,7 @@ const auto queueFamilies = candidate.getQueueFamilyProperties(); // C API: vkGet
 목록의 각 항목에는 해당 패밀리의 큐 개수와 지원하는 명령 종류가 들어 있습니다. 패밀리를 찾으면 배열 인덱스가 필요하므로, 인덱스로 목록을 순회합니다. 조회 코드 아래에 반복문을 추가합니다.
 
 ```cpp
-for (std::uint32_t index = 0; index < queueFamilies.size(); ++index)
+for (uint32_t index = 0; index < queueFamilies.size(); ++index)
 {
     const auto& family = queueFamilies[index];
     // 컴퓨트 명령을 처리할 수 있는지 확인합니다.
@@ -134,6 +134,11 @@ if (family.queueCount > 0 && (family.queueFlags & vk::QueueFlagBits::eCompute))
 ```cpp
 return std::nullopt;
 ```
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> 큐와 큐 패밀리는 각각 무엇이며 어떤 관계인가요? Vulkan Hardware Capability Viewer를 사용하여 자신의 GPU가 제공하는 큐 패밀리별 지원 기능과 큐 개수를 확인해 보세요.
 
 ## 조건을 만족하는 장치 저장하기
 

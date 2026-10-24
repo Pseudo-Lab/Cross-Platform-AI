@@ -6,11 +6,11 @@
 
 명령을 먼저 기록해 묶어서 제출하면 CPU가 GPU 작업마다 완료를 기다릴 필요가 없습니다. 연산 순서와 리소스가 같다면 기록도 재사용할 수 있어, 다음 장에서는 입력 데이터만 바꿔 같은 커맨드 버퍼를 다시 제출합니다.
 
-[main.cpp](main.cpp)의 TODO를 순서대로 채웁니다. 여기서는 기록까지만 마치며, 큐에 제출하고 계산 결과를 확인하는 과정은 다음 장에서 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/10-command-buffers.cpp`에서 확인할 수 있습니다.
+[main.cpp](main.cpp)에 아래 순서대로 코드를 작성합니다. 여기서는 기록까지만 마치며, 큐에 제출하고 계산 결과를 확인하는 과정은 다음 장에서 작성합니다. 완성된 코드는 공개 후 `examples/99-completed/10-command-buffers.cpp`에서 확인할 수 있습니다.
 
 ## 풀과 커맨드 버퍼 보관하기
 
-커맨드 풀(Command pool)은 명령 기록에 필요한 메모리를 모아 관리하고, 커맨드 버퍼를 할당하는 객체입니다. 같은 풀의 기록용 메모리를 재사용하거나 함께 초기화할 수 있도록 할당 단위를 분리한 것입니다. `private` 영역의 `computePipeline` 뒤 TODO를 다음 멤버로 바꿉니다.
+커맨드 풀(Command pool)은 명령 기록에 필요한 메모리를 모아 관리하고, 커맨드 버퍼를 할당하는 객체입니다. 같은 풀의 기록용 메모리를 재사용하거나 함께 초기화할 수 있도록 할당 단위를 분리한 것입니다. `private` 영역의 `computePipeline` 뒤에 다음 멤버를 추가합니다.
 
 ```cpp
 vk::raii::CommandPool commandPool = nullptr;
@@ -19,7 +19,7 @@ std::vector<vk::raii::CommandBuffer> commandBuffers;
 
 커맨드 버퍼 하나를 `commandBuffers[0]`에 보관합니다. 멤버는 선언의 역순으로 소멸하므로 커맨드 버퍼가 먼저 해제되고, 그 버퍼를 할당한 풀이 나중에 해제됩니다.
 
-클래스 끝의 TODO 위치에 풀 생성 함수의 틀을 추가합니다.
+클래스의 `private` 영역 끝에 풀 생성 함수의 틀을 추가합니다.
 
 ```cpp
 bool createCommandPool()
@@ -72,10 +72,10 @@ return true;
 
 ## 기록 시작하기
 
-`private`의 `elementCount` 바로 아래 TODO에 셰이더의 워크그룹 크기를 추가합니다.
+`private`의 `elementCount` 바로 아래에 셰이더의 워크그룹 크기를 추가합니다.
 
 ```cpp
-static constexpr std::uint32_t workgroupSize = 64;
+static constexpr uint32_t workgroupSize = 64;
 ```
 
 이 값은 [add.comp](add.comp)의 `local_size_x = 64`와 같아야 합니다. CPU 쪽 상수만 바꿔도 셰이더의 크기가 바뀌지는 않습니다.
@@ -91,7 +91,7 @@ bool recordCommandBuffer()
 함수 안에서 X 방향 워크그룹 수를 먼저 계산합니다. 한 그룹이 64개의 인보케이션을 실행하므로, 원소 수를 그룹 크기로 나누어 올림합니다.
 
 ```cpp
-const std::uint32_t groupCount = (elementCount + workgroupSize - 1) / workgroupSize;
+const uint32_t groupCount = (elementCount + workgroupSize - 1) / workgroupSize;
 ```
 
 그리고 03장에서 조회한 장치 한계와 비교합니다.
@@ -106,6 +106,11 @@ if (groupCount > limits.maxComputeWorkGroupCount[0])
 ```
 
 X 방향 그룹 수가 장치에서 지원하는 최대값을 넘으면 기록하지 않습니다. 이 실습은 작은 고정 크기 입력을 사용합니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> 서브그룹(subgroup)은 워크그룹과 어떤 관계이며 CUDA의 warp와는 어떻게 비교할 수 있나요? 워크그룹 크기와 서브그룹 크기는 각각 누가 정하나요?
 
 그 아래에서 첫 커맨드 버퍼를 참조하고 기록을 시작합니다.
 
@@ -145,12 +150,12 @@ cmd.bindDescriptorSets(vk::PipelineBindPoint::eCompute, *pipelineLayout,
 디스크립터 셋을 바인딩한 다음 푸시 상수 값을 기록합니다.
 
 ```cpp
-const std::uint32_t count = elementCount;
-cmd.pushConstants<std::uint32_t>(*pipelineLayout, vk::ShaderStageFlagBits::eCompute,
+const uint32_t count = elementCount;
+cmd.pushConstants<uint32_t>(*pipelineLayout, vk::ShaderStageFlagBits::eCompute,
                                 0, count); // C API: vkCmdPushConstants
 ```
 
-09장에서 레이아웃에 선언한 범위에 실제 값을 넣는 단계입니다. 오프셋 `0`부터 `std::uint32_t` 크기인 4바이트를 전달하며, 셰이더는 이 값을 읽어 유효한 원소 인덱스인지 검사합니다.
+09장에서 레이아웃에 선언한 범위에 실제 값을 넣는 단계입니다. 오프셋 `0`부터 `uint32_t` 크기인 4바이트를 전달하며, 셰이더는 이 값을 읽어 유효한 원소 인덱스인지 검사합니다.
 
 푸시 상수의 값은 이 호출에서 커맨드 버퍼에 기록됩니다. 이후 CPU 변수만 바꿔도 기록된 값이 바뀌지는 않습니다. 원소 수를 바꾸려면 해당 값을 포함한 명령을 다시 기록해야 합니다. [푸시 상수 기록](https://docs.vulkan.org/refpages/latest/refpages/source/vkCmdPushConstants.html)
 
@@ -173,6 +178,12 @@ return true;
 ```
 
 `end()`가 성공하면 제출 가능한 기록이 만들어집니다. 아직 큐 제출을 하지 않았으므로 출력 버퍼에는 GPU의 계산 결과가 들어 있지 않습니다.
+
+> [!NOTE]
+> **생각해볼 점**
+>
+> - 원소 수가 130이고 워크그룹 크기가 64라면 워크그룹과 인보케이션은 각각 몇 개가 필요할까요? 실제 덧셈을 수행하지 않는 인보케이션은 어떻게 처리되나요?
+> - `dispatch()`를 호출한 시점에 GPU 계산도 시작될까요? CUDA와 어떤 차이가 있나요?
 
 ## 초기화와 실행 순서에 연결하기
 

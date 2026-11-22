@@ -283,3 +283,5 @@ Resources destroyed.
 ```
 
 이 장의 코드를 완성한 뒤, 실행 결과가 보이도록 터미널을 캡처해 제출합니다.
+
+[14장](../14-eva-multiple-dispatches/README.md)에서는 같은 연속 디스패치를 Eva로 구현한 코드와 Vulkan-Hpp API의 대응을 확인합니다.

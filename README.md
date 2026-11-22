@@ -6,8 +6,8 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 
 ## 튜토리얼
 
-예제는 Vulkan-Hpp의 `vk::raii`를 사용합니다. C API 함수와 1:1로 대응하는 호출에만 함수명을 주석으로 표기합니다.
-01장부터는 각 장의 `main.cpp`를 열고 README의 코드 블록을 따라 채워 나갑니다. 완성본은 `examples/99-completed/`에 모아 별도로 공개합니다.
+00~13장 예제는 Vulkan-Hpp의 `vk::raii`를 사용합니다. C API 함수와 1:1로 대응하는 호출에만 함수명을 주석으로 표기합니다.
+01~13장은 각 장의 `main.cpp`를 열고 README의 코드 블록을 따라 채워 나갑니다. 완성본은 `examples/99-completed/`에 모아 별도로 공개합니다.
 각 예제는 해당 폴더에서 CMake로 독립적으로 빌드합니다. 빌드 명령은 각 장의 문서를 따릅니다.
 
 1. [00. 환경 설정](examples/00-env-settings/README.md) · [English](examples/00-env-settings/README-en.md) — 개발 도구 설치, Vulkan 장치 조회, C++ 빌드와 셰이더 컴파일 확인
@@ -24,8 +24,11 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 12. [11. 디스패치와 동기화](examples/11-dispatch-synchronization/README.md) — 큐 제출, 배리어와 펜스, CPU 정답 검증, 입력을 바꿔 재실행
 13. [12. 스테이징 버퍼](examples/12-staging-buffers/README.md) — 전송용·연산용 버퍼 분리, 복사와 전송 ↔ 컴퓨트 동기화
 14. [13. 연속 디스패치](examples/13-multiple-dispatches/README.md) — 중간 버퍼와 두 디스크립터 셋, 컴퓨트 → 컴퓨트 동기화, 연속 연산 검증
+15. [14. Eva로 연속 디스패치 작성하기](examples/14-eva-multiple-dispatches/README.md) — Eva로 구현한 전체 코드, Vulkan-Hpp API와의 대응, 정답 및 동기화 검증
 
 11장까지는 첫 GPU 벡터 덧셈을 완성합니다. 12장은 데이터 전송을 분리하고, 13장은 GPU에 남아 있는 중간 결과를 다음 연산으로 연결합니다.
+
+14장은 13장의 동작을 Eva로 구현한 비교 예제입니다. 완성 코드가 제공되며 C++23과 `external/eva` 서브모듈이 필요합니다. 의존성 준비와 빌드 방법은 14장의 문서를 따릅니다.
 
 ## 다루는 내용
 

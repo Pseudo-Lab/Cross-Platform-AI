@@ -30,6 +30,10 @@ Vulkan 기반 GPU 추론의 동작 원리를 코드로 살펴보는 문서·예�
 
 14장은 13장의 동작을 Eva로 구현한 비교 예제입니다. 완성 코드가 제공되며 C++23과 `external/eva` 서브모듈이 필요합니다. 의존성 준비와 빌드 방법은 14장의 문서를 따릅니다.
 
+### vAi 커널 실습
+
+- [15. Naive matmul](examples/15-naive-matmul/README.md) — GLSL 행렬곱 커널과 vAi 노드를 작성하고, 기존 ReLU 노드에 연결해 결과 행렬을 출력합니다.
+
 ## 다루는 내용
 
 ### Vulkan 컴퓨트 기초

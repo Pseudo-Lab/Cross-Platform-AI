@@ -13,6 +13,12 @@
 !/examples/[0-9][0-9]-*/README*.md
 !/examples/[0-9][0-9]-*/*.cpp
 !/examples/[0-9][0-9]-*/*.comp
+!/examples/15-naive-matmul/*.h
+!/examples/15-naive-matmul/shaders/
+!/examples/15-naive-matmul/shaders/*.comp
+/examples/99-completed/15-naive-matmul.cpp
+/examples/99-completed/15-naive-matmul.h
+/examples/99-completed/15-naive-matmul.comp
 
 # Submodule.
 !/external/
